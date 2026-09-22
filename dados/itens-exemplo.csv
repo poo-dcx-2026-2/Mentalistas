@@ -1,0 +1,6 @@
+codigo;titulo;autoria;categoria;ano
+L001;Java Efetivo;Joshua Bloch;livro;2019
+L002;Refatoração;Martin Fowler;livro;2004
+L003;Código limpo;Robert C. Martin;livro;2009
+L004;Utilizando UML e Padrões;Craig Larman;livro;2007
+L005;Padrões de Projeto;Erich Gamma et al.;livro;2000
