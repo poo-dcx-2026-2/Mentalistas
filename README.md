@@ -104,6 +104,6 @@ O uso é permitido como apoio, desde que declarado em [`DECLARACAO-DE-USO-DE-IA.
 ## Equipe
 
 | Nome | Matrícula | GitHub |
-|Gustavo |20250104468|gustacsdev|
+|Gustavo | 20250104468 | gustacsdev |
 | | | |
 | | | |
