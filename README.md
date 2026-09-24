@@ -105,5 +105,5 @@ O uso é permitido como apoio, desde que declarado em [`DECLARACAO-DE-USO-DE-IA.
 
 | Nome | Matrícula | GitHub |
 |Gustavo | 20250104468 | gustacsdev |
-| | | |
+|Alan Pierre | 20250144964 | Alan-Pierre75 |
 | | | |
