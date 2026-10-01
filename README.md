@@ -91,7 +91,11 @@ Sua equipe escolhe um acervo próprio: jogos, filmes, quadrinhos, instrumentos, 
 
 ### Nossa extensão
 
-> Acervo de Jogos,  , o que ela muda no comportamento do sistema.
+> Nosso Acervo: Acervo de Jogos
+> 
+> Regra de negócio: Empréstimo por faixa etária de idade
+> 
+> O que ela muda no comportamento do sistema: Um cliente só pode alugar um jogo se sua idade for igual ou superior à classificação indicativa do jogo
 
 ---
 
@@ -104,6 +108,7 @@ O uso é permitido como apoio, desde que declarado em [`DECLARACAO-DE-USO-DE-IA.
 ## Equipe
 
 | Nome | Matrícula | GitHub |
-|Gustavo Coutinho | 20250104468 | gustacsdev |
-|Alan Pierre | 20250144964 | Alan-Pierre75 |
 
+|Gustavo Coutinho | 20250104468 | gustacsdev |
+
+|Alan Pierre | 20250144964 | Alan-Pierre75 |
