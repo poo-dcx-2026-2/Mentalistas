@@ -147,8 +147,6 @@ class AcervoTest {
     }
 
     @Test
-    @Disabled("Entrega 1: implementar buscarPorTitulo")
-    @DisplayName("busca por título ignora maiúsculas e aceita trecho")
     void buscarPorTitulo() throws BibliotecaException {
         biblioteca.acervo().cadastrarItem("L1", "Java Efetivo", "Bloch", "livro", 2019);
         biblioteca.acervo().cadastrarItem("L2", "Refatoração", "Fowler", "livro", 2004);
@@ -158,7 +156,6 @@ class AcervoTest {
     }
 
     @Test
-    @Disabled("Entrega 1: implementar buscarPorTitulo")
     @DisplayName("busca sem resultado devolve lista vazia, não exceção")
     void buscarPorTituloSemResultado() {
         assertEquals(List.of(), biblioteca.acervo().buscarPorTitulo("inexistente"));

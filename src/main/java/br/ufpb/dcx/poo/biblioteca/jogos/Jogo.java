@@ -4,8 +4,7 @@ package br.ufpb.dcx.poo.biblioteca.jogos;
 import java.util.ArrayList;
 import java.util.List;
 
-
-public class Item {
+public class Jogo{
 
     private String codigo;
     private String titulo;
@@ -14,7 +13,7 @@ public class Item {
     private int ano;
     private final List<Exemplar> exemplares = new ArrayList<>();
 
-    public Item(String codigo, String titulo, String autoria, String categoria, int ano) {
+    public Jogo(String codigo, String titulo, String autoria, String categoria, int ano) {
         this.codigo = codigo;
         this.titulo = titulo;
         this.autoria = autoria;

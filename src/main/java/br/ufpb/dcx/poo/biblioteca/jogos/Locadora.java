@@ -6,17 +6,15 @@ import br.ufpb.dcx.poo.biblioteca.contrato.EmprestimoService;
 import br.ufpb.dcx.poo.biblioteca.contrato.RelatorioService;
 import br.ufpb.dcx.poo.biblioteca.contrato.UsuarioService;
 import br.ufpb.dcx.poo.biblioteca.contrato.excecoes.PersistenciaException;
-import br.ufpb.dcx.poo.biblioteca.inicial.AcervoEmMemoria;
 import br.ufpb.dcx.poo.biblioteca.inicial.EmprestimosNaoImplementados;
 import br.ufpb.dcx.poo.biblioteca.inicial.RelatoriosNaoImplementados;
-import br.ufpb.dcx.poo.biblioteca.inicial.UsuariosEmMemoria;
 
 
 
 public class Locadora implements Biblioteca {
 
-    private final AcervoEmMemoria acervo = new AcervoEmMemoria();
-    private final UsuariosEmMemoria usuarios = new UsuariosEmMemoria();
+    private final AcervoDeJogos acervo = new AcervoDeJogos();
+    private final DadosdoUsuario usuarios = new DadosdoUsuario();
     private final EmprestimosNaoImplementados emprestimos = new EmprestimosNaoImplementados();
     private final RelatoriosNaoImplementados relatorios = new RelatoriosNaoImplementados();
 

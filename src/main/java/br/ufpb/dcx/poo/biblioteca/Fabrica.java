@@ -1,7 +1,7 @@
 package br.ufpb.dcx.poo.biblioteca;
 
 import br.ufpb.dcx.poo.biblioteca.contrato.Biblioteca;
-import br.ufpb.dcx.poo.biblioteca.inicial.BibliotecaInicial;
+import br.ufpb.dcx.poo.biblioteca.jogos.Locadora;
 
 /**
  * Ponto de entrada do sistema.
@@ -22,6 +22,6 @@ public final class Fabrica {
      * com isso para não interferirem uns nos outros.</p>
      */
     public static Biblioteca novaBiblioteca() {
-        return new BibliotecaInicial();
+        return new Locadora();
     }
 }

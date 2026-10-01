@@ -4,6 +4,7 @@ package br.ufpb.dcx.poo.biblioteca.jogos;
 import br.ufpb.dcx.poo.biblioteca.contrato.AcervoService;
 import br.ufpb.dcx.poo.biblioteca.contrato.ExemplarView;
 import br.ufpb.dcx.poo.biblioteca.contrato.ItemView;
+import br.ufpb.dcx.poo.biblioteca.contrato.StatusExemplar;
 import br.ufpb.dcx.poo.biblioteca.contrato.excecoes.DadosInvalidosException;
 import br.ufpb.dcx.poo.biblioteca.contrato.excecoes.OperacaoNaoPermitidaException;
 import br.ufpb.dcx.poo.biblioteca.contrato.excecoes.RecursoDuplicadoException;
@@ -18,7 +19,7 @@ import java.util.List;
 
 public class AcervoDeJogos implements AcervoService {
 
-    private final List<Item> itens = new ArrayList<>();
+    private final List<Jogo> jogos = new ArrayList<>();
 
 
     @Override
@@ -32,12 +33,29 @@ public class AcervoDeJogos implements AcervoService {
         if (localizar(codigo) != null) {
             throw new RecursoDuplicadoException("Já existe item com o código " + codigo);
         }
-        itens.add(new Item(codigo, titulo, autoria, categoria, ano));
+        jogos.add(new Jogo(codigo, titulo, autoria, categoria, ano));
     }
 
     @Override
     public ItemView buscarItem(String codigo) throws RecursoNaoEncontradoException {
-        return null;
+        int disponiveis = 0;
+        for (Jogo jogo : jogos) {
+            if (jogo.getCodigo().equals(codigo)) {
+                return new ItemView(
+                        jogo.getCodigo(),
+                        jogo.getTitulo(),
+                        jogo.getAutoria(),
+                        jogo.getCategoria(),
+                        jogo.getAno(),
+                        jogo.getExemplares().size(),
+                        disponiveis
+                );
+            }
+        }
+
+        throw new RecursoNaoEncontradoException(
+                "Item não encontrado: " + codigo
+        );
     }
 
     @Override
@@ -47,7 +65,35 @@ public class AcervoDeJogos implements AcervoService {
 
     @Override
     public List<ItemView> buscarPorTitulo(String trecho) {
-        return List.of();
+        List<ItemView> resultado = new ArrayList<>();
+
+        for (Jogo jogo : jogos) {
+            if (jogo.getTitulo().toLowerCase().contains(trecho.toLowerCase())) {
+
+                int total = jogo.getExemplares().size();
+
+                int disponiveis = 0;
+
+                for (Exemplar exemplar : jogo.getExemplares()) {
+                    if (exemplar.getStatus() == StatusExemplar.DISPONIVEL) {
+                        disponiveis++;
+                    }
+                }
+
+                resultado.add(new ItemView(
+                        jogo.getCodigo(),
+                        jogo.getTitulo(),
+                        jogo.getAutoria(),
+                        jogo.getCategoria(),
+                        jogo.getAno(),
+                        total,
+                        disponiveis
+                ));
+            }
+        }
+
+        return resultado;
+
     }
 
     @Override
@@ -70,8 +116,8 @@ public class AcervoDeJogos implements AcervoService {
 
     }
 
-    private Item localizar(String codigo) {
-        for (Item item : itens) {
+    private Jogo localizar(String codigo) {
+        for (Jogo item : jogos) {
             if (item.getCodigo() == codigo) {
                 return item;
             }
@@ -85,7 +131,7 @@ public class AcervoDeJogos implements AcervoService {
         }
     }
 
-    List<Item> itens() {
-        return itens;
+    List<Jogo> itens() {
+        return jogos;
     }
 }
