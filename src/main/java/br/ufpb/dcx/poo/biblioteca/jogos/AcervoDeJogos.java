@@ -38,18 +38,10 @@ public class AcervoDeJogos implements AcervoService {
 
     @Override
     public ItemView buscarItem(String codigo) throws RecursoNaoEncontradoException {
-        int disponiveis = 0;
         for (Jogo jogo : jogos) {
             if (jogo.getCodigo().equals(codigo)) {
-                return new ItemView(
-                        jogo.getCodigo(),
-                        jogo.getTitulo(),
-                        jogo.getAutoria(),
-                        jogo.getCategoria(),
-                        jogo.getAno(),
-                        jogo.getExemplares().size(),
-                        disponiveis
-                );
+
+                return paraView(jogo);
             }
         }
 
@@ -108,12 +100,50 @@ public class AcervoDeJogos implements AcervoService {
 
     @Override
     public void adicionarExemplar(String codigoDoItem, String tombo) throws RecursoNaoEncontradoException, RecursoDuplicadoException {
+        Jogo jogo = localizar(codigoDoItem);
+
+        if (jogo == null) {
+            throw new RecursoNaoEncontradoException(
+                    "Item não encontrado: " + codigoDoItem
+            );
+        }
+
+        for (Jogo item : jogos) {
+            for (Exemplar exemplar : item.getExemplares()) {
+                if (exemplar.getTombo().equals(tombo)) {
+                    throw new RecursoDuplicadoException(
+                            "Já existe exemplar com o tombo " + tombo
+                    );
+                }
+            }
+        }
+
+        Exemplar exemplar = new Exemplar(tombo, jogo);
+        jogo.getExemplares().add(exemplar);
 
     }
 
     @Override
     public List<ExemplarView> listarExemplares(String codigoDoItem) throws RecursoNaoEncontradoException {
-        return List.of();
+        Jogo jogo = localizar(codigoDoItem);
+
+        if (jogo == null) {
+            throw new RecursoNaoEncontradoException(
+                    "Item não encontrado: " + codigoDoItem
+            );
+        }
+
+        List<ExemplarView> resultado = new ArrayList<>();
+
+        for (Exemplar exemplar : jogo.getExemplares()) {
+            resultado.add(new ExemplarView(
+                    exemplar.getTombo(),
+                    jogo.getCodigo(),
+                    exemplar.getStatus()
+            ));
+        }
+
+        return resultado;
     }
 
     @Override
