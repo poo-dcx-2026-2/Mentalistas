@@ -9,7 +9,7 @@ import br.ufpb.dcx.poo.biblioteca.contrato.excecoes.DadosInvalidosException;
 import br.ufpb.dcx.poo.biblioteca.contrato.excecoes.OperacaoNaoPermitidaException;
 import br.ufpb.dcx.poo.biblioteca.contrato.excecoes.RecursoDuplicadoException;
 import br.ufpb.dcx.poo.biblioteca.contrato.excecoes.RecursoNaoEncontradoException;
-
+import br.ufpb.dcx.poo.biblioteca.inicial.Item;
 
 
 import java.util.ArrayList;
@@ -60,7 +60,12 @@ public class AcervoDeJogos implements AcervoService {
 
     @Override
     public List<ItemView> listarItens() {
-        return List.of();
+        List<ItemView> resultado = new ArrayList<>();
+        for (Jogo jogo : jogos) {
+            resultado.add(paraView(jogo));
+        }
+        resultado.sort((a, b) -> a.titulo().compareToIgnoreCase(b.titulo()));
+        return resultado;
     }
 
     @Override
@@ -118,11 +123,27 @@ public class AcervoDeJogos implements AcervoService {
 
     private Jogo localizar(String codigo) {
         for (Jogo item : jogos) {
-            if (item.getCodigo() == codigo) {
+            if (item.getCodigo().equals(codigo)) {
                 return item;
             }
         }
         return null;
+    }
+    private ItemView paraView(Jogo jogo) {
+        int disponiveis = 0;
+        for (br.ufpb.dcx.poo.biblioteca.jogos.Exemplar exemplar : jogo.getExemplares()) {
+            if (exemplar.getStatus() == StatusExemplar.DISPONIVEL) {
+                disponiveis++;
+            }
+        }
+        return new ItemView(
+                jogo.getCodigo(),
+                jogo.getTitulo(),
+                jogo.getAutoria(),
+                jogo.getCategoria(),
+                jogo.getAno(),
+                jogo.getExemplares().size(),
+                disponiveis);
     }
 
     private static void exigirTextoPreenchido(String valor, String campo) {
