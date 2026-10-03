@@ -11,22 +11,74 @@
 skinparam classAttributeIconSize 0
 hide empty members
 
-class Item {
-  - codigo : String
-  - titulo : String
+class Locadora {
+    - AcervoDeJogos acervo
+    - DadosdoUsuario usuarios
+    - EmprestimosNaoImplementados emprestimos
+    - RelatoriosNaoImplementados relatorios
+    + acervo()
+    + usuarios()
+    + emprestimos()
+    + relatorios()
+    + salvar()
+    + carregar()
+}
+
+class AcervoDeJogos {
+    - List<Jogo> jogos
+    + cadastrarItem()
+    + buscarItem()
+    + listarItens()
+    + buscarPorTitulo()
+    + buscarPorCategoria()
+    + adicionarExemplar()
+    + listarExemplares()
+    + baixarExemplar()
+}
+
+class DadosdoUsuario {
+    - List<String> matriculas
+    - List<String> nomes
+    - List<Boolean> ativos
+    + cadastrarUsuario()
+    + buscarUsuario()
+    + listarUsuarios()
+    + desativarUsuario()
+    + reativarUsuario()
+}
+
+class Jogo {
+    - String : codigo
+    - String : titulo
+    - String : autoria
+    - String : categoria
+    - int : ano
+    - List<Exemplar> exemplares
+    + getCodigo()
+    + getTitulo()
+    + getAutoria()
+    + getCategoria()
+    + getAno()
+    + getExemplares()
 }
 
 class Exemplar {
-  - tombo : String
+    - String : tombo
+    - Jogo : item
+    - StatusExemplar : status
+    + getTombo()
+    + getItem()
+    + getStatus()
+    + setStatus()
 }
 
-Item "1" *-- "0..*" Exemplar : possui
+Locadora --> AcervoDeJogos
+Locadora --> DadosdoUsuario
+Locadora --> EmprestimosNaoImplementados
+Locadora --> RelatoriosNaoImplementados
 
-note bottom of Item
-  Ponto de partida, não modelo pronto.
-  Decidam: quais entidades existem,
-  quem guarda o quê, quais invariantes
-  cada objeto protege.
-end note
+AcervoDeJogos "1" --> "0..*" Jogo
+Jogo "1" *-- "0..*" Exemplar
+Exemplar --> Jogo
 
 @enduml
