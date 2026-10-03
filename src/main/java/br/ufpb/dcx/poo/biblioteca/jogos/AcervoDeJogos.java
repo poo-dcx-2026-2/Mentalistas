@@ -9,7 +9,7 @@ import br.ufpb.dcx.poo.biblioteca.contrato.excecoes.DadosInvalidosException;
 import br.ufpb.dcx.poo.biblioteca.contrato.excecoes.OperacaoNaoPermitidaException;
 import br.ufpb.dcx.poo.biblioteca.contrato.excecoes.RecursoDuplicadoException;
 import br.ufpb.dcx.poo.biblioteca.contrato.excecoes.RecursoNaoEncontradoException;
-import br.ufpb.dcx.poo.biblioteca.inicial.Item;
+
 
 
 import java.util.ArrayList;
@@ -62,34 +62,28 @@ public class AcervoDeJogos implements AcervoService {
 
     @Override
     public List<ItemView> buscarPorTitulo(String trecho) {
-        List<ItemView> resultado = new ArrayList<>();
+        return jogos.stream()
+                .filter(jogo -> jogo.getTitulo()
+                        .toLowerCase()
+                        .contains(trecho.toLowerCase()))
+                .map(jogo -> {
+                    int total = jogo.getExemplares().size();
 
-        for (Jogo jogo : jogos) {
-            if (jogo.getTitulo().toLowerCase().contains(trecho.toLowerCase())) {
+                    int disponiveis = (int) jogo.getExemplares().stream()
+                            .filter(exemplar -> exemplar.getStatus() == StatusExemplar.DISPONIVEL)
+                            .count();
 
-                int total = jogo.getExemplares().size();
-
-                int disponiveis = 0;
-
-                for (Exemplar exemplar : jogo.getExemplares()) {
-                    if (exemplar.getStatus() == StatusExemplar.DISPONIVEL) {
-                        disponiveis++;
-                    }
-                }
-
-                resultado.add(new ItemView(
-                        jogo.getCodigo(),
-                        jogo.getTitulo(),
-                        jogo.getAutoria(),
-                        jogo.getCategoria(),
-                        jogo.getAno(),
-                        total,
-                        disponiveis
-                ));
-            }
-        }
-
-        return resultado;
+                    return new ItemView(
+                            jogo.getCodigo(),
+                            jogo.getTitulo(),
+                            jogo.getAutoria(),
+                            jogo.getCategoria(),
+                            jogo.getAno(),
+                            total,
+                            disponiveis
+                    );
+                })
+                .toList();
 
     }
 
