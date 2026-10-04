@@ -37,9 +37,7 @@ class AcervoDeJogos {
 }
 
 class DadosdoUsuario {
-    - List<String> matriculas
-    - List<String> nomes
-    - List<Boolean> ativos
+    - usuarios : Map<String, UsuarioView>
     + cadastrarUsuario()
     + buscarUsuario()
     + listarUsuarios()
