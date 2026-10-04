@@ -157,4 +157,13 @@ class AcervoTest {
     void buscarPorTituloSemResultado() {
         assertEquals(List.of(), biblioteca.acervo().buscarPorTitulo("inexistente"));
     }
+
+    @Test
+    @DisplayName("não permite cadastrar item com ano de publicação futuro")
+    void naoPermiteAnoFuturo() {
+
+        assertThrows(DadosInvalidosException.class,
+                () -> biblioteca.acervo().cadastrarItem(
+                        "L4", "Spider-man", "Autor", "Jogo", 2030));
+    }
 }
