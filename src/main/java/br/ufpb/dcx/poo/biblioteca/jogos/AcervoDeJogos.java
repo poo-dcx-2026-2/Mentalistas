@@ -30,6 +30,12 @@ public class AcervoDeJogos implements AcervoService {
         exigirTextoPreenchido(codigo, "codigo");
         exigirTextoPreenchido(titulo, "titulo");
 
+        if (ano > java.time.Year.now().getValue()) {
+            throw new DadosInvalidosException(
+                    "O ano de lançamento não pode ser futuro."
+            );
+        }
+
         if (localizar(codigo) != null) {
             throw new RecursoDuplicadoException("Já existe item com o código " + codigo);
         }
