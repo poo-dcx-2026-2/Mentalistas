@@ -37,14 +37,14 @@ src/main/java/br/ufpb/dcx/poo/biblioteca/
 │
 ├── Fabrica.java       ← nome e assinatura congelados; o corpo é seu
 │
-└── inicial/           ← ponto de partida; altere, mova, renomeie ou apague
-    ├── Item.java
+└── jogos/           ← ponto de partida; altere, mova, renomeie ou apague
+    ├── Jogo.java
     ├── Exemplar.java
-    ├── AcervoEmMemoria.java
-    ├── UsuariosEmMemoria.java
+    ├── AcervoDeJogos.java
+    ├── DadosdoUsuario.java
     ├── EmprestimosNaoImplementados.java
     ├── RelatoriosNaoImplementados.java
-    └── BibliotecaInicial.java
+    └── Locadora.java
 
 src/test/java/…       ← seus testes; comece pelos que já estão aqui
 dados/                ← arquivos de exemplo
