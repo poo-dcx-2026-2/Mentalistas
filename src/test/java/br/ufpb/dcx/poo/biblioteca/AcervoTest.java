@@ -166,4 +166,62 @@ class AcervoTest {
                 () -> biblioteca.acervo().cadastrarItem(
                         "L4", "Spider-man", "Autor", "Jogo", 2030));
     }
+    @Test
+    @DisplayName("baixar exemplar altera seu status para INDISPONIVEL")
+    void baixarExemplar() throws BibliotecaException {
+        biblioteca.acervo().cadastrarItem("L1", "Java Efetivo", "Bloch", "livro", 2019);
+        biblioteca.acervo().adicionarExemplar("L1", "T-001");
+
+        biblioteca.acervo().baixarExemplar("T-001");
+
+        assertEquals(
+                StatusExemplar.INDISPONIVEL,
+                biblioteca.acervo().listarExemplares("L1").get(0).status()
+        );
+
+        ItemView item = biblioteca.acervo().buscarItem("L1");
+
+        assertEquals(1, item.totalDeExemplares());
+        assertEquals(0, item.exemplaresDisponiveis());
+    }
+
+    @Test
+    @DisplayName("não permite baixar exemplar inexistente")
+    void baixarExemplarInexistente() {
+        assertThrows(
+                RecursoNaoEncontradoException.class,
+                () -> biblioteca.acervo().baixarExemplar("T-999")
+        );
+    }
+
+    @Test
+    @DisplayName("não permite baixar um exemplar que já está indisponível")
+    void baixarExemplarJaBaixado() throws BibliotecaException {
+        biblioteca.acervo().cadastrarItem("L1", "Java Efetivo", "Bloch", "livro", 2019);
+        biblioteca.acervo().adicionarExemplar("L1", "T-001");
+
+        biblioteca.acervo().baixarExemplar("T-001");
+
+        assertThrows(
+                br.ufpb.dcx.poo.biblioteca.contrato.excecoes.OperacaoNaoPermitidaException.class,
+                () -> biblioteca.acervo().baixarExemplar("T-001")
+        );
+    }
+
+    @Test
+    @DisplayName("não permite baixar exemplar emprestado")
+    void baixarExemplarEmprestado() throws BibliotecaException {
+        biblioteca.acervo().cadastrarItem("L1", "Java Efetivo", "Bloch", "livro", 2019);
+        biblioteca.acervo().adicionarExemplar("L1", "T-001");
+
+        // Coloque o exemplar no estado EMPRESTADO usando o fluxo de empréstimo.
+
+        assertThrows(
+                br.ufpb.dcx.poo.biblioteca.contrato.excecoes.OperacaoNaoPermitidaException.class,
+                () -> biblioteca.acervo().baixarExemplar("T-001")
+        );
+    }
+
+
+
 }
