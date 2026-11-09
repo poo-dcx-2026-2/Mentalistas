@@ -146,9 +146,40 @@ public class AcervoDeJogos implements AcervoService {
         return resultado;
     }
 
+    private Exemplar localizarExemplar(String tombo) {
+        for (Jogo jogo : jogos) {
+            for (Exemplar exemplar : jogo.getExemplares()) {
+                if (exemplar.getTombo().equals(tombo)) {
+                    return exemplar;
+                }
+            }
+        }
+        return null;
+    }
+
     @Override
     public void baixarExemplar(String tombo) throws RecursoNaoEncontradoException, OperacaoNaoPermitidaException {
+        Exemplar exemplar = localizarExemplar(tombo);
 
+        if (exemplar == null) {
+            throw new RecursoNaoEncontradoException(
+                    "Exemplar não encontrado: " + tombo
+            );
+        }
+
+        if (exemplar.getStatus() == StatusExemplar.INDISPONIVEL) {
+            throw new OperacaoNaoPermitidaException(
+                    "Exemplar já está baixado."
+            );
+        }
+
+        if (exemplar.getStatus() == StatusExemplar.EMPRESTADO) {
+            throw new OperacaoNaoPermitidaException(
+                    "Não é possível baixar um exemplar emprestado."
+            );
+        }
+
+        exemplar.setStatus(StatusExemplar.INDISPONIVEL);
     }
 
     private Jogo localizar(String codigo) {
