@@ -14,7 +14,7 @@ import br.ufpb.dcx.poo.biblioteca.contrato.excecoes.RecursoNaoEncontradoExceptio
 
 public class DadosdoUsuario implements UsuarioService {
 
-    private final Map<String, UsuarioView> usuarios = new HashMap<>();
+    private final Map<String, Usuario> usuarios = new HashMap<>();
 
     @Override
     public void cadastrarUsuario(String matricula, String nome)
@@ -29,25 +29,31 @@ public class DadosdoUsuario implements UsuarioService {
             if (usuarios.containsKey(matricula)) {
                 throw new RecursoDuplicadoException("Já existe usuário com a matrícula " + matricula);
             }
-            usuarios.put(matricula, new UsuarioView(matricula,nome,true,0));
+            usuarios.put(matricula, new Usuario(matricula,nome));
         }
 
     @Override
     public UsuarioView buscarUsuario(String matricula) throws RecursoNaoEncontradoException {
 
-        UsuarioView usuario = usuarios.get(matricula);
+        Usuario usuario = usuarios.get(matricula);
         if (usuario == null) {
             throw new RecursoNaoEncontradoException("Usuário não encontrado: " + matricula);
         }
-        return usuario;
+        return paraView(usuario);
 
     }
 
     @Override
     public List<UsuarioView> listarUsuarios() {
 
-        List<UsuarioView> resultado = new ArrayList<>(usuarios.values());
-        resultado.sort((a, b) -> a.nome().compareToIgnoreCase(b.nome()));
+        List<UsuarioView> resultado = new ArrayList<>();
+        for (Usuario usuario : usuarios.values()) {
+            resultado.add(paraView(usuario));
+        }
+
+        resultado.sort((a, b) ->
+                a.nome().compareToIgnoreCase(b.nome()));
+
         return resultado;
 
     }
@@ -56,10 +62,40 @@ public class DadosdoUsuario implements UsuarioService {
     public void desativarUsuario(String matricula)
         throws RecursoNaoEncontradoException, OperacaoNaoPermitidaException {
 
+        Usuario usuario = usuarios.get(matricula);
+
+        if (usuario == null) {
+            throw new RecursoNaoEncontradoException(
+                    "Usuário não encontrado: " + matricula);
+        }
+
+        if (usuario.getEmprestimosAtivos() > 0) {
+            throw new OperacaoNaoPermitidaException(
+                    "Usuário possui empréstimos ativos.");
+        }
+
+        usuario.desativar();
     }
 
     @Override
     public void reativarUsuario(String matricula) throws RecursoNaoEncontradoException {
+        Usuario usuario = usuarios.get(matricula);
 
+        if (usuario == null) {
+            throw new RecursoNaoEncontradoException(
+                    "Usuário não encontrado: " + matricula);
+        }
+
+        usuario.reativar();
     }
+
+    private UsuarioView paraView(Usuario usuario) {
+        return new UsuarioView(
+                usuario.getMatricula(),
+                usuario.getNome(),
+                usuario.isAtivo(),
+                usuario.getEmprestimosAtivos()
+        );
+    }
+
 }
