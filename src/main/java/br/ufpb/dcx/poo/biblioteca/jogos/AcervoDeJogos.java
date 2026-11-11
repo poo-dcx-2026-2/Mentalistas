@@ -213,7 +213,14 @@ public class AcervoDeJogos implements AcervoService {
         }
     }
 
+    public void definirClassificacaoIndicativa(String codigo, int classificacao) {
+        Jogo jogo = localizar(codigo);
+        jogo.definirClassificacaoIndicativa(classificacao);
+    }
+
     List<Jogo> itens() {
         return jogos;
     }
+
+
 }

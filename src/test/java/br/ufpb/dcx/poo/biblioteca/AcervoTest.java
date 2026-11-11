@@ -1,10 +1,9 @@
 package br.ufpb.dcx.poo.biblioteca;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
+import java.time.LocalDate;
 import java.util.List;
 
+import br.ufpb.dcx.poo.biblioteca.jogos.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
@@ -17,6 +16,8 @@ import br.ufpb.dcx.poo.biblioteca.contrato.excecoes.BibliotecaException;
 import br.ufpb.dcx.poo.biblioteca.contrato.excecoes.DadosInvalidosException;
 import br.ufpb.dcx.poo.biblioteca.contrato.excecoes.RecursoDuplicadoException;
 import br.ufpb.dcx.poo.biblioteca.contrato.excecoes.RecursoNaoEncontradoException;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Testes públicos do acervo.
@@ -165,5 +166,137 @@ class AcervoTest {
         assertThrows(DadosInvalidosException.class,
                 () -> biblioteca.acervo().cadastrarItem(
                         "L4", "Spider-man", "Autor", "Jogo", 2030));
+    }
+
+    @Test
+    @DisplayName("não permite empréstimo quando o usuário é menor que a classificação")
+    void idadeInsuficiente() throws Exception {
+        Locadora locadora = new Locadora();
+
+        AcervoDeJogos acervo = (AcervoDeJogos) locadora.acervo();
+        DadosdoUsuario usuarios = (DadosdoUsuario) locadora.usuarios();
+
+        acervo.cadastrarItem("J1", "God of War", "Santa Monica", "Ação", 2022);
+        acervo.adicionarExemplar("J1", "T001");
+        acervo.definirClassificacaoIndicativa("J1", 18);
+
+        usuarios.cadastrarUsuario("U1", "João");
+        usuarios.definirIdade("U1", 16);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> locadora.emprestarComVerificacaoDeIdade(
+                        "T001", "U1", LocalDate.of(2026, 1, 10)
+                )
+        );
+    }
+
+    @Test
+    @DisplayName("permite empréstimo quando a idade é igual à classificação indicativa")
+    void idadeIgualClassificacao() throws Exception {
+        Locadora locadora = new Locadora();
+
+        AcervoDeJogos acervo = (AcervoDeJogos) locadora.acervo();
+        DadosdoUsuario usuarios = (DadosdoUsuario) locadora.usuarios();
+
+        // Cadastra o jogo e seu exemplar
+        acervo.cadastrarItem("J1", "God of War", "Santa Monica", "Ação", 2022);
+        acervo.adicionarExemplar("J1", "T001");
+
+        // Define a classificação indicativa
+        acervo.definirClassificacaoIndicativa("J1", 16);
+
+        // Cadastra o usuário com idade igual à classificação
+        usuarios.cadastrarUsuario("U1", "João");
+        usuarios.definirIdade("U1", 16);
+
+        // Verifica se o empréstimo é permitido
+        assertDoesNotThrow(() ->
+                locadora.emprestarComVerificacaoDeIdade(
+                        "T001",
+                        "U1",
+                        LocalDate.of(2026, 1, 10)
+                )
+        );
+    }
+
+    @Test
+    @DisplayName("permite empréstimo quando a idade é maior que a classificação")
+    void idadeMaiorClassificacao() throws Exception {
+        Locadora locadora = new Locadora();
+
+        AcervoDeJogos acervo = (AcervoDeJogos) locadora.acervo();
+        DadosdoUsuario usuarios = (DadosdoUsuario) locadora.usuarios();
+
+        acervo.cadastrarItem("J1", "God of War", "Santa Monica", "Ação", 2022);
+        acervo.adicionarExemplar("J1", "T001");
+        acervo.definirClassificacaoIndicativa("J1", 12);
+
+        usuarios.cadastrarUsuario("U1", "João");
+        usuarios.definirIdade("U1", 18);
+
+        assertDoesNotThrow(() ->
+                locadora.emprestarComVerificacaoDeIdade(
+                        "T001", "U1", LocalDate.of(2026, 1, 10)
+                )
+        );
+    }
+
+    @Test
+    @DisplayName("mantém o exemplar disponível quando a idade é insuficiente")
+    void exemplarContinuaDisponivel() throws Exception {
+        Locadora locadora = new Locadora();
+
+        AcervoDeJogos acervo = (AcervoDeJogos) locadora.acervo();
+        DadosdoUsuario usuarios = (DadosdoUsuario) locadora.usuarios();
+
+        acervo.cadastrarItem("J1", "God of War", "Santa Monica", "Ação", 2022);
+        acervo.adicionarExemplar("J1", "T001");
+        acervo.definirClassificacaoIndicativa("J1", 18);
+
+        usuarios.cadastrarUsuario("U1", "João");
+        usuarios.definirIdade("U1", 15);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> locadora.emprestarComVerificacaoDeIdade(
+                        "T001", "U1", LocalDate.of(2026, 1, 10)
+                )
+        );
+
+        assertEquals(
+                StatusExemplar.DISPONIVEL,
+                acervo.listarExemplares("J1").get(0).status()
+        );
+    }
+
+    @Test
+    @DisplayName("não permite definir idade negativa")
+    void idadeNegativa() {
+        Usuario usuario = new Usuario("U1", "João");
+
+        assertThrows(IllegalArgumentException.class,
+                () -> usuario.definirIdade(-1)
+        );
+    }
+
+    @Test
+    @DisplayName("não permite classificação indicativa inválida")
+    void classificacaoInvalida() {
+        Jogo jogo = new Jogo(
+                "J1", "God of War", "Santa Monica", "Ação", 2022
+        );
+
+        assertThrows(IllegalArgumentException.class,
+                () -> jogo.definirClassificacaoIndicativa(15)
+        );
+    }
+
+    @Test
+    @DisplayName("não permite definir idade para usuário inexistente")
+    void usuarioInexistente() {
+        DadosdoUsuario usuarios = new DadosdoUsuario();
+
+        assertThrows(RecursoNaoEncontradoException.class,
+                () -> usuarios.definirIdade("U99", 18)
+        );
     }
 }
