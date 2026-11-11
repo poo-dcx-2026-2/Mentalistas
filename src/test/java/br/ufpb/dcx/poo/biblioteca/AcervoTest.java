@@ -39,7 +39,7 @@ class AcervoTest {
     }
 
     @Test
-    @DisplayName("um item cadastrado pode ser recuperado pelo código")
+    @DisplayName("um jogo cadastrado pode ser recuperado pelo código")
     void cadastrarEBuscar() throws BibliotecaException {
         biblioteca.acervo().cadastrarItem("L1", "Java Efetivo", "Bloch", "livro", 2019);
 
@@ -52,7 +52,7 @@ class AcervoTest {
     }
 
     @Test
-    @DisplayName("item novo começa sem exemplares")
+    @DisplayName("jogo novo começa sem exemplares")
     void itemNovoNaoTemExemplares() throws BibliotecaException {
         biblioteca.acervo().cadastrarItem("L1", "Java Efetivo", "Bloch", "livro", 2019);
 
@@ -72,7 +72,7 @@ class AcervoTest {
     }
 
     @Test
-    @DisplayName("buscar item inexistente lança RecursoNaoEncontradoException")
+    @DisplayName("buscar jogo inexistente lança RecursoNaoEncontradoException")
     void buscarInexistente() {
         assertThrows(RecursoNaoEncontradoException.class,
                 () -> biblioteca.acervo().buscarItem("NAO-EXISTE"));
@@ -86,7 +86,7 @@ class AcervoTest {
     }
 
     @Test
-    @DisplayName("listar devolve os itens ordenados por título")
+    @DisplayName("listar devolve os jogos ordenados por título")
     void listarOrdenado() throws BibliotecaException {
         biblioteca.acervo().cadastrarItem("L1", "Refatoração", "Fowler", "livro", 2004);
         biblioteca.acervo().cadastrarItem("L2", "Código limpo", "Martin", "livro", 2009);
@@ -111,7 +111,7 @@ class AcervoTest {
     // ------------------------------------------------------------------
 
     @Test
-    @DisplayName("exemplar adicionado entra como DISPONIVEL e conta no item")
+    @DisplayName("exemplar adicionado entra como DISPONIVEL e conta no jogo")
     void adicionarExemplar() throws BibliotecaException {
         biblioteca.acervo().cadastrarItem("L1", "Java Efetivo", "Bloch", "livro", 2019);
         biblioteca.acervo().adicionarExemplar("L1", "T-001");

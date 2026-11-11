@@ -6,6 +6,7 @@ public class Usuario {
     private final String nome;
     private boolean ativo;
     private int emprestimosAtivos;
+    private int idade;
 
     public Usuario(String matricula, String nome) {
         this.matricula = matricula;
@@ -46,5 +47,17 @@ public class Usuario {
         if (emprestimosAtivos > 0) {
             emprestimosAtivos--;
         }
+    }
+
+    public int getIdade() {
+        return idade;
+    }
+
+    public void definirIdade(int idade) {
+        if (idade < 0) {
+            throw new IllegalArgumentException("Idade inválida.");
+        }
+
+        this.idade = idade;
     }
 }

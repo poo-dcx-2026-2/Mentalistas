@@ -11,6 +11,7 @@ public class Jogo{
     private String autoria;
     private String categoria;
     private int ano;
+    private int classificacaoIndicativa;
     private final List<Exemplar> exemplares = new ArrayList<>();
 
     public Jogo(String codigo, String titulo, String autoria, String categoria, int ano) {
@@ -37,4 +38,21 @@ public class Jogo{
     public void setAno(int ano) { this.ano = ano; }
 
     public List<Exemplar> getExemplares() { return exemplares; }
+
+    public int getClassificacaoIndicativa() {
+        return classificacaoIndicativa;
+    }
+
+    public void definirClassificacaoIndicativa(int classificacaoIndicativa) {
+        if (classificacaoIndicativa != 0
+                && classificacaoIndicativa != 10
+                && classificacaoIndicativa != 12
+                && classificacaoIndicativa != 14
+                && classificacaoIndicativa != 16
+                && classificacaoIndicativa != 18) {
+            throw new IllegalArgumentException("Classificação indicativa inválida.");
+        }
+
+        this.classificacaoIndicativa = classificacaoIndicativa;
+    }
 }

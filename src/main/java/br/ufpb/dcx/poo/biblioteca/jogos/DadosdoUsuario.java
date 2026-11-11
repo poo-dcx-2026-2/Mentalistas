@@ -109,4 +109,11 @@ public class DadosdoUsuario implements UsuarioService {
         return usuario;
     }
 
+    public void definirIdade(String matricula, int idade)
+            throws RecursoNaoEncontradoException {
+
+        Usuario usuario = localizar(matricula);
+        usuario.definirIdade(idade);
+    }
+
 }
