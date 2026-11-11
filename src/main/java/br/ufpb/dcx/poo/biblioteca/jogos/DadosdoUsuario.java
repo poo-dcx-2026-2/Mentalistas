@@ -97,5 +97,16 @@ public class DadosdoUsuario implements UsuarioService {
                 usuario.getEmprestimosAtivos()
         );
     }
+    Usuario localizar(String matricula) throws RecursoNaoEncontradoException {
+        Usuario usuario = usuarios.get(matricula);
+
+        if (usuario == null) {
+            throw new RecursoNaoEncontradoException(
+                    "Usuário não encontrado: " + matricula
+            );
+        }
+
+        return usuario;
+    }
 
 }
