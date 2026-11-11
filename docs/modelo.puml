@@ -16,67 +16,160 @@ class Locadora {
     - DadosdoUsuario usuarios
     - EmprestimosNaoImplementados emprestimos
     - RelatoriosNaoImplementados relatorios
+    - EmprestimosDeJogos emprestimo
     + acervo()
     + usuarios()
     + emprestimos()
     + relatorios()
     + salvar()
     + carregar()
+    + emprestarComVerificacaoDeIdade(tombo, matricula, data)
 }
 
 class AcervoDeJogos {
     - List<Jogo> jogos
-    + cadastrarItem()
-    + buscarItem()
+    + cadastrarItem(codigo, titulo, autoria, categoria, ano)
+    + buscarItem(codigo)
     + listarItens()
-    + buscarPorTitulo()
-    + buscarPorCategoria()
-    + adicionarExemplar()
-    + listarExemplares()
-    + baixarExemplar()
+    + buscarPorTitulo(trecho)
+    + buscarPorCategoria(categoria)
+    + adicionarExemplar(codigoDoItem, tombo)
+    + listarExemplares(codigoDoItem)
+    + baixarExemplar(tombo)
+    - localizarExemplar(tombo)
+    - localizar(codigo)
+    - paraView(jogo)
+    - exigirTextoPreenchido(valor, campo)
+    ~ itens()
 }
 
 class DadosdoUsuario {
-    - usuarios : Map<String, UsuarioView>
-    + cadastrarUsuario()
-    + buscarUsuario()
+    - Map<String, Usuario> usuarios
+    + cadastrarUsuario(matricula, nome)
+    + buscarUsuario(matricula)
     + listarUsuarios()
-    + desativarUsuario()
-    + reativarUsuario()
+    + desativarUsuario(matricula)
+    + reativarUsuario(matricula)
+    + definirIdade(matricula, idade)
+    - paraView(usuario)
+    ~ localizar(matricula)
 }
 
 class Jogo {
-    - String : codigo
-    - String : titulo
-    - String : autoria
-    - String : categoria
-    - int : ano
+    - String codigo
+    - String titulo
+    - String autoria
+    - String categoria
+    - int ano
+    - int classificacaoIndicativa
     - List<Exemplar> exemplares
+    + Jogo(codigo, titulo, autoria, categoria, ano)
     + getCodigo()
+    + setCodigo(codigo)
     + getTitulo()
+    + setTitulo(titulo)
     + getAutoria()
+    + setAutoria(autoria)
     + getCategoria()
+    + setCategoria(categoria)
     + getAno()
+    + setAno(ano)
     + getExemplares()
+    + getClassificacaoIndicativa()
+    + definirClassificacaoIndicativa(classificacaoIndicativa)
 }
 
 class Exemplar {
-    - String : tombo
-    - Jogo : item
-    - StatusExemplar : status
-    + getTombo()
-    + getItem()
-    + getStatus()
-    + setStatus()
+   - String tombo
+       - Jogo item
+       - StatusExemplar status
+
+       + Exemplar(tombo, item)
+       + getTombo()
+       + setTombo(tombo)
+       + getItem()
+       + setItem(item)
+       + getStatus()
+       + setStatus(status)
 }
+
+class Usuario {
+    - String matricula
+    - String nome
+    - boolean ativo
+    - int emprestimosAtivos
+    - int idade
+    + Usuario(matricula, nome)
+    + getMatricula()
+    + getNome()
+    + isAtivo()
+    + getEmprestimosAtivos()
+    + desativar()
+    + reativar()
+    ~ registrarEmprestimo()
+    ~ registrarDevolucao()
+    + getIdade()
+    + definirIdade(idade)
+}
+
+class EmprestimosDeJogos {
+    - AcervoDeJogos acervo
+    - DadosdoUsuario usuarios
+    - List<Emprestimo> emprestimos
+    - List<ReservaView> reservas
+    + EmprestimosDeJogos(acervo, usuarios)
+    + emprestar(tombo, matricula, data)
+    + devolver(tombo, data)
+    + listarEmprestimosDoUsuario(matricula)
+    + listarAtrasados(data)
+    + reservar(codigoDoItem, matricula, data)
+    + listarReservas(codigoDoItem)
+    + cancelarReserva(idDaReserva)
+    - localizarExemplar(tombo)
+    - localizarJogo(codigo)
+    - localizarEmprestimoAtivo(tombo)
+    - paraView(emprestimo, data)
+    - atualizarPosicoes(codigoDoItem)
+}
+
+class Emprestimo {
+    - String id
+    - Exemplar exemplar
+    - Usuario usuario
+    - LocalDate dataDoEmprestimo
+    - LocalDate dataPrevistaDeDevolucao
+    - LocalDate dataDaDevolucao
+    + Emprestimo(id, exemplar, usuario, dataDoEmprestimo)
+    + getId()
+    + getExemplar()
+    + getUsuario()
+    + getDataDoEmprestimo()
+    + getDataPrevistaDeDevolucao()
+    + getDataDaDevolucao()
+    + estaAtivo()
+    + estaAtrasadoEm(data)
+    + registrarDevolucao(data)
+}
+
+class EmprestimosNaoImplementados
+class RelatoriosNaoImplementados
 
 Locadora --> AcervoDeJogos
 Locadora --> DadosdoUsuario
 Locadora --> EmprestimosNaoImplementados
+Locadora --> EmprestimosDeJogos
 Locadora --> RelatoriosNaoImplementados
 
 AcervoDeJogos "1" --> "0..*" Jogo
 Jogo "1" *-- "0..*" Exemplar
-Exemplar --> Jogo
+
+DadosdoUsuario "1" --> "0..*" Usuario
+
+EmprestimosDeJogos --> AcervoDeJogos
+EmprestimosDeJogos --> DadosdoUsuario
+EmprestimosDeJogos "1" --> "0..*" Emprestimo
+
+Emprestimo --> Exemplar
+Emprestimo --> Usuario
 
 @enduml
