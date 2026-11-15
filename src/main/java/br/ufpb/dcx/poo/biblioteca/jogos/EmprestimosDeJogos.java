@@ -362,4 +362,60 @@ public class EmprestimosDeJogos implements EmprestimoService {
             ));
         }
     }
+    void limpar() {
+        emprestimos.clear();
+        reservas.clear();
+    }
+
+    void restaurarEmprestimo(String id, String tombo,
+                             String matricula,
+                             LocalDate dataEmprestimo,
+                             LocalDate dataDevolucao)
+            throws RecursoNaoEncontradoException {
+
+        Exemplar exemplar = localizarExemplar(tombo);
+        Usuario usuario = usuarios.localizar(matricula);
+
+        Emprestimo novo = new Emprestimo(
+                id,
+                exemplar,
+                usuario,
+                dataEmprestimo
+        );
+
+        if (dataDevolucao != null) {
+            novo.registrarDevolucao(dataDevolucao);
+        }
+
+        emprestimos.add(novo);
+
+        if (novo.estaAtivo()) {
+            exemplar.setStatus(StatusExemplar.EMPRESTADO);
+            usuario.registrarEmprestimo();
+        }
+    }
+
+    void restaurarReserva(String id, String codigoDoItem,
+                          String matricula, LocalDate data,
+                          int posicao) {
+
+        ReservaView reserva = new ReservaView(
+                id,
+                codigoDoItem,
+                matricula,
+                data,
+                posicao
+        );
+
+        reservas.add(reserva);
+    }
+
+    List<Emprestimo> listarTodosEmprestimos() {
+        return new ArrayList<>(emprestimos);
+    }
+
+    List<ReservaView> listarTodasReservas() {
+        return new ArrayList<>(reservas);
+    }
+
 }
