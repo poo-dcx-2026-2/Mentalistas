@@ -14,9 +14,9 @@ hide empty members
 class Locadora {
     - AcervoDeJogos acervo
     - DadosdoUsuario usuarios
-    - EmprestimosNaoImplementados emprestimos
     - RelatoriosNaoImplementados relatorios
     - EmprestimosDeJogos emprestimo
+    - Path PASTA_DADOS
     + acervo()
     + usuarios()
     + emprestimos()
@@ -24,6 +24,9 @@ class Locadora {
     + salvar()
     + carregar()
     + emprestarComVerificacaoDeIdade(tombo, matricula, data)
+    - codificar(texto)
+    - decodificar(texto)
+    - lerArquivo(nome)
 }
 
 class AcervoDeJogos {
@@ -41,6 +44,9 @@ class AcervoDeJogos {
     - paraView(jogo)
     - exigirTextoPreenchido(valor, campo)
     ~ itens()
+    ~ limpar()
+    ~ restaurarJogo(codigo, titulo, autoria, categoria, ano, classificacao)
+    ~ restaurarExemplar(codigo, tombo, status)
 }
 
 class DadosdoUsuario {
@@ -53,6 +59,9 @@ class DadosdoUsuario {
     + definirIdade(matricula, idade)
     - paraView(usuario)
     ~ localizar(matricula)
+    ~ limpar()
+    ~ restaurarUsuario(matricula, nome, idade, ativo)
+    ~ listarTodosUsuarios()
 }
 
 class Jogo {
@@ -80,17 +89,16 @@ class Jogo {
 }
 
 class Exemplar {
-   - String tombo
-       - Jogo item
-       - StatusExemplar status
-
-       + Exemplar(tombo, item)
-       + getTombo()
-       + setTombo(tombo)
-       + getItem()
-       + setItem(item)
-       + getStatus()
-       + setStatus(status)
+    - String tombo
+    - Jogo item
+    - StatusExemplar status
+    + Exemplar(tombo, item)
+    + getTombo()
+    + setTombo(tombo)
+    + getItem()
+    + setItem(item)
+    + getStatus()
+    + setStatus(status)
 }
 
 class Usuario {
@@ -130,6 +138,11 @@ class EmprestimosDeJogos {
     - localizarEmprestimoAtivo(tombo)
     - paraView(emprestimo, data)
     - atualizarPosicoes(codigoDoItem)
+    ~ limpar()
+    ~ restaurarEmprestimo(id, tombo, matricula, dataEmprestimo, dataDevolucao)
+    ~ restaurarReserva(id, codigoDoItem, matricula, data, posicao)
+    ~ listarTodosEmprestimos()
+    ~ listarTodasReservas()
 }
 
 class Emprestimo {
@@ -151,12 +164,10 @@ class Emprestimo {
     + registrarDevolucao(data)
 }
 
-class EmprestimosNaoImplementados
 class RelatoriosNaoImplementados
 
 Locadora --> AcervoDeJogos
 Locadora --> DadosdoUsuario
-Locadora --> EmprestimosNaoImplementados
 Locadora --> EmprestimosDeJogos
 Locadora --> RelatoriosNaoImplementados
 
