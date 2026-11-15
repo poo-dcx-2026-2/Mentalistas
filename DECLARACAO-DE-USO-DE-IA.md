@@ -17,12 +17,17 @@ sim.
 
 Uma linha por uso relevante. Se não houve uso, escreva "Não houve uso de ferramentas de IA".
 
-| Data | Ferramenta | Finalidade | Arquivos/trechos afetados | O que foi revisado e alterado por vocês |
-|---|---|---|---|---|
-|29/09/2026| ChatGPT|Auxílio na definição do domínio e das regras de negócio da locadora de jogos.|README e definição das regras do projeto|A equipe escolheu e adaptou a regra de negócio de empréstimo por faixa etária para o domínio de locadora de jogos.|
-|30/09/2026 | ChatGPT |Auxílio na implementação das classes do domínio e integração com a fábrica. |Fabrica.java, Locadora.java, Jogo.java, Exemplar.java | O código foi revisado, adaptado à estrutura do projeto e ao contrato fornecido pela disciplina. |
-|01/10/2026| ChatGPT |Auxílio na identificação e correção de erros encontrados nos testes automatizados.|AcervoDeJogos.java e métodos relacionados ao acervo|A equipe analisou os erros dos testes, corrigiu a implementação e verificou o comportamento esperado.|
-|03/10/2026| ChatGPT | Auxílio na implementação do método de busca por título utilizando Stream e map.|AcervoDeJogos.java, método buscarPorTitulo |A equipe revisou e adaptou o código para atender às regras de busca, ordenação e contagem de exemplares disponíveis, realizando testes posteriormente.|
+| Data        | Ferramenta | Finalidade                                                                                               | Arquivos/trechos afetados | O que foi revisado e alterado por vocês |
+|-------------|----------|----------------------------------------------------------------------------------------------------------|---|---|
+| 29/09/2026  | ChatGPT  | Auxílio na definição do domínio e das regras de negócio da locadora de jogos.                            |README e definição das regras do projeto|A equipe escolheu e adaptou a regra de negócio de empréstimo por faixa etária para o domínio de locadora de jogos.|
+| 30/09/2026  | ChatGPT  | Auxílio na implementação das classes do domínio e integração com a fábrica.                              |Fabrica.java, Locadora.java, Jogo.java, Exemplar.java | O código foi revisado, adaptado à estrutura do projeto e ao contrato fornecido pela disciplina. |
+| 01/10/2026  | ChatGPT  | Auxílio na identificação e correção de erros encontrados nos testes automatizados.                       |AcervoDeJogos.java e métodos relacionados ao acervo|A equipe analisou os erros dos testes, corrigiu a implementação e verificou o comportamento esperado.|
+| 03/10/2026  | ChatGPT  | Auxílio na implementação do método de busca por título utilizando Stream e map.                          |AcervoDeJogos.java, método buscarPorTitulo |A equipe revisou e adaptou o código para atender às regras de busca, ordenação e contagem de exemplares disponíveis, realizando testes posteriormente.|
+| 09/11/2026  | ChatGPT  | Auxílio na adaptação da classe de usuários para atender aos requisitos da Entrega 2.                     | DadosdoUsuario.java e Usuario.java  | A equipe revisou a implementação do armazenamento dos usuários, controle de situação ativa/inativa e quantidade de empréstimos ativos, mantendo a compatibilidade com o pacote contrato.  |
+| 10/11/2026  | ChatGPT  | Auxílio na implementação e revisão das funcionalidades de empréstimos.                                   | EmprestimosDeJogos.java e Emprestimo.java | A equipe analisou e adaptou os métodos de empréstimo, devolução e consulta, considerando as regras de negócio, validações e exceções previstas no contrato. |
+| 11/11/2026  | ChatGPT  | Auxílio na análise de erros e no desenvolvimento dos testes relacionados aos empréstimos e usuários.     | EmprestimosDeJogos.java, DadosdoUsuario.java e classes de teste  | A equipe revisou os cenários apresentados, adaptou as soluções e executou testes para verificar o funcionamento das operações. |
+| 14/11/2026  | ChatGPT    | Auxílio na implementação da persistência de dados da locadora.                                           | Locadora.java, AcervoDeJogos.java, DadosdoUsuario.java e EmprestimosDeJogos.java  | A equipe revisou e adaptou os métodos salvar e carregar, incluindo a gravação e recuperação dos dados de jogos, exemplares, usuários, empréstimos e reservas.  |
+| 14/11/2026  | ChatGPT    | Auxílio na elaboração e revisão dos testes de persistência e na verificação dos requisitos da Entrega 2. | Classes de teste, especialmente AcervoTest.java e testes de persistência  | A equipe analisou os cenários de teste, adaptou as implementações e executou a suíte de testes, verificando os resultados obtidos.  |
 
 
 
@@ -39,5 +44,5 @@ Ao entregar, a equipe declara que:
 
 Assinaturas (nome e data)
 
-Gustavo Coutinho Soares 05/10/2026
-Alan Pierre de Sousa Duarte 05/10/2026
+Gustavo Coutinho Soares 14/11/2026
+Alan Pierre de Sousa Duarte 14/11/2026
