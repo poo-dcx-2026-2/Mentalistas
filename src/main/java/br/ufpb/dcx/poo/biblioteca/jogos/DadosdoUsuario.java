@@ -116,4 +116,26 @@ public class DadosdoUsuario implements UsuarioService {
         usuario.definirIdade(idade);
     }
 
+    void limpar() {
+        usuarios.clear();
+    }
+
+    void restaurarUsuario(String matricula, String nome,
+                          int idade, boolean ativo) {
+
+        Usuario usuario = new Usuario(matricula, nome);
+
+        usuario.definirIdade(idade);
+
+        if (!ativo) {
+            usuario.desativar();
+        }
+
+        usuarios.put(matricula, usuario);
+    }
+
+    List<Usuario> listarTodosUsuarios() {
+        return new ArrayList<>(usuarios.values());
+    }
+
 }

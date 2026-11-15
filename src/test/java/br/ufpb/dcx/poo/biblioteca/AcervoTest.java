@@ -16,6 +16,7 @@ import br.ufpb.dcx.poo.biblioteca.contrato.excecoes.BibliotecaException;
 import br.ufpb.dcx.poo.biblioteca.contrato.excecoes.DadosInvalidosException;
 import br.ufpb.dcx.poo.biblioteca.contrato.excecoes.RecursoDuplicadoException;
 import br.ufpb.dcx.poo.biblioteca.contrato.excecoes.RecursoNaoEncontradoException;
+import br.ufpb.dcx.poo.biblioteca.contrato.excecoes.OperacaoNaoPermitidaException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -299,4 +300,84 @@ class AcervoTest {
                 () -> usuarios.definirIdade("U99", 18)
         );
     }
+
+    @Test
+    @DisplayName("não permite adicionar exemplar com tombo em branco")
+    void tomboEmBranco() throws BibliotecaException {
+        biblioteca.acervo().cadastrarItem(
+                "L1", "Java Efetivo", "Bloch", "livro", 2019);
+
+        assertThrows(DadosInvalidosException.class,
+                () -> biblioteca.acervo().adicionarExemplar("L1", "  "));
+    }
+
+    @Test
+    @DisplayName("não permite adicionar dois exemplares com o mesmo tombo")
+    void tomboDuplicadoNoMesmoItem() throws BibliotecaException {
+        biblioteca.acervo().cadastrarItem(
+                "L1", "Java Efetivo", "Bloch", "livro", 2019);
+
+        biblioteca.acervo().adicionarExemplar("L1", "T001");
+
+        assertThrows(RecursoDuplicadoException.class,
+                () -> biblioteca.acervo().adicionarExemplar("L1", "T001"));
+    }
+
+    @Test
+    @DisplayName("baixa de exemplar disponível altera seu status")
+    void baixarExemplarDisponivel() throws BibliotecaException {
+        biblioteca.acervo().cadastrarItem(
+                "L1", "Java Efetivo", "Bloch", "livro", 2019);
+
+        biblioteca.acervo().adicionarExemplar("L1", "T001");
+        biblioteca.acervo().adicionarExemplar("L1", "T002");
+
+        biblioteca.acervo().baixarExemplar("T001");
+
+        ItemView item = biblioteca.acervo().buscarItem("L1");
+
+        assertEquals(2, item.totalDeExemplares());
+        assertEquals(1, item.exemplaresDisponiveis());
+
+        assertEquals(StatusExemplar.INDISPONIVEL,
+                biblioteca.acervo().listarExemplares("L1")
+                        .get(0).status());
+    }
+
+    @Test
+    @DisplayName("não permite baixar exemplar que está emprestado")
+    void baixarExemplarEmprestado() throws Exception {
+        Locadora locadora = new Locadora();
+
+        locadora.acervo().cadastrarItem(
+                "J1", "God of War", "Santa Monica", "Jogo", 2022);
+
+        locadora.acervo().adicionarExemplar("J1", "T001");
+        locadora.usuarios().cadastrarUsuario("U1", "João");
+
+        locadora.emprestimos().emprestar(
+                "T001", "U1", LocalDate.of(2026, 1, 10));
+
+        assertThrows(OperacaoNaoPermitidaException.class,
+                () -> locadora.acervo().baixarExemplar("T001"));
+    }
+
+    @Test
+    @DisplayName("busca por título retorna todos os jogos correspondentes")
+    void buscarPorTituloRetornaVariosResultados() throws BibliotecaException {
+        biblioteca.acervo().cadastrarItem(
+                "L1", "Java Efetivo", "Bloch", "livro", 2019);
+
+        biblioteca.acervo().cadastrarItem(
+                "L2", "Java Básico", "Autor", "livro", 2020);
+
+        biblioteca.acervo().cadastrarItem(
+                "L3", "Código Limpo", "Martin", "livro", 2009);
+
+        List<ItemView> resultado =
+                biblioteca.acervo().buscarPorTitulo("Java");
+
+        assertEquals(2, resultado.size());
+    }
+
 }

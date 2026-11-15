@@ -101,6 +101,10 @@ public class AcervoDeJogos implements AcervoService {
     @Override
     public void adicionarExemplar(String codigoDoItem, String tombo) throws RecursoNaoEncontradoException, RecursoDuplicadoException {
         Jogo jogo = localizar(codigoDoItem);
+        if (tombo == null || tombo.isBlank()) {
+            throw new DadosInvalidosException(
+                    "O tombo do exemplar é obrigatório.");
+        }
 
         if (jogo == null) {
             throw new RecursoNaoEncontradoException(
@@ -220,6 +224,36 @@ public class AcervoDeJogos implements AcervoService {
 
     List<Jogo> itens() {
         return jogos;
+    }
+
+    void limpar() {
+        jogos.clear();
+    }
+
+    void restaurarJogo(String codigo, String titulo,
+                       String autoria, String categoria,
+                       int ano, int classificacao) {
+
+        Jogo jogo = new Jogo(codigo, titulo, autoria, categoria, ano);
+
+        jogo.definirClassificacaoIndicativa(classificacao);
+
+        jogos.add(jogo);
+    }
+
+    void restaurarExemplar(String codigo, String tombo,
+                           StatusExemplar status) {
+
+        Jogo jogo = localizar(codigo);
+
+        if (jogo == null) {
+            throw new IllegalArgumentException("Jogo não encontrado.");
+        }
+
+        Exemplar exemplar = new Exemplar(tombo, jogo);
+        exemplar.setStatus(status);
+
+        jogo.getExemplares().add(exemplar);
     }
 
 
