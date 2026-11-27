@@ -380,4 +380,50 @@ class AcervoTest {
         assertEquals(2, resultado.size());
     }
 
+    @Test
+    void buscarPorCategoriaIgnoraMaiusculasEMinusculas() throws Exception {
+        AcervoDeJogos acervo = new AcervoDeJogos();
+
+        acervo.cadastrarItem("J1", "Minecraft", "Mojang", "Aventura", 2011);
+        acervo.cadastrarItem("J2", "FIFA", "EA", "Esporte", 2024);
+
+        List<ItemView> resultado = acervo.buscarPorCategoria("AVENTURA");
+
+        assertEquals(1, resultado.size());
+        assertEquals("Minecraft", resultado.get(0).titulo());
+    }
+
+    @Test
+    void buscarPorCategoriaOrdenaPorTitulo() throws Exception {
+        AcervoDeJogos acervo = new AcervoDeJogos();
+
+        acervo.cadastrarItem("J1", "Zelda", "Nintendo", "Aventura", 2020);
+        acervo.cadastrarItem("J2", "Assassin's Creed", "Ubisoft", "Aventura", 2022);
+        acervo.cadastrarItem("J3", "Minecraft", "Mojang", "Aventura", 2011);
+
+        List<ItemView> resultado = acervo.buscarPorCategoria("Aventura");
+
+        assertEquals("Assassin's Creed", resultado.get(0).titulo());
+        assertEquals("Minecraft", resultado.get(1).titulo());
+        assertEquals("Zelda", resultado.get(2).titulo());
+    }
+
+    @Test
+    void buscarPorCategoriaSemResultadosRetornaListaVazia() {
+        AcervoDeJogos acervo = new AcervoDeJogos();
+
+        List<ItemView> resultado = acervo.buscarPorCategoria("Estratégia");
+
+        assertTrue(resultado.isEmpty());
+    }
+
+    @Test
+    void buscarPorCategoriaVaziaLancaExcecao() {
+        AcervoDeJogos acervo = new AcervoDeJogos();
+
+        assertThrows(DadosInvalidosException.class,
+                () -> acervo.buscarPorCategoria(" "));
+    }
+
+
 }

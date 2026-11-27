@@ -94,8 +94,15 @@ public class AcervoDeJogos implements AcervoService {
     }
 
     @Override
-    public List<ItemView> buscarPorCategoria(String categoria) {
-        return List.of();
+    public List<ItemView> buscarPorCategoria(String categoria) {exigirTextoPreenchido(categoria, "categoria");
+
+        return jogos.stream()
+                .filter(jogo -> jogo.getCategoria()
+                        .equalsIgnoreCase(categoria.trim()))
+                .sorted((a, b) -> a.getTitulo()
+                        .compareToIgnoreCase(b.getTitulo()))
+                .map(this::paraView)
+                .toList();
     }
 
     @Override
