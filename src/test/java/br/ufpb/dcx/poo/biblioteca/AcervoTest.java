@@ -8,7 +8,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
+import br.ufpb.dcx.poo.biblioteca.contrato.excecoes.ExemplarIndisponivelException;
 import br.ufpb.dcx.poo.biblioteca.contrato.Biblioteca;
 import br.ufpb.dcx.poo.biblioteca.contrato.ItemView;
 import br.ufpb.dcx.poo.biblioteca.contrato.StatusExemplar;
@@ -497,6 +497,98 @@ class AcervoTest {
                 () -> locadora.emprestimos().devolver(
                         "T001", LocalDate.of(2026, 1, 15)));
     }
+
+    @Test
+    @DisplayName("primeiro usuário da fila de reservas tem prioridade")
+    void primeiroUsuarioDaFilaTemPrioridade() throws Exception {
+        Locadora locadora = new Locadora();
+
+        locadora.acervo().cadastrarItem(
+                "J1", "God of War", "Santa Monica", "Jogo", 2022);
+
+        locadora.acervo().adicionarExemplar("J1", "T001");
+
+        locadora.usuarios().cadastrarUsuario("U0", "Carlos");
+        locadora.usuarios().cadastrarUsuario("U1", "João");
+        locadora.usuarios().cadastrarUsuario("U2", "Maria");
+
+        LocalDate data = LocalDate.of(2026, 1, 10);
+
+        // Carlos pega o exemplar.
+        locadora.emprestimos().emprestar("T001", "U0", data);
+
+        // João e Maria entram na fila de reservas.
+        locadora.emprestimos().reservar("J1", "U1", data);
+        locadora.emprestimos().reservar("J1", "U2", data.plusDays(1));
+
+        // Carlos devolve o exemplar.
+        locadora.emprestimos().devolver("T001", data.plusDays(2));
+
+        // João, primeiro da fila, consegue pegar o exemplar.
+        assertDoesNotThrow(() ->
+                locadora.emprestimos().emprestar(
+                        "T001", "U1", data.plusDays(3)));
+    }
+
+    @Test
+    @DisplayName("usuário que não é o primeiro da fila não pode pegar o exemplar")
+    void usuarioForaDaOrdemNaoPodeEmprestar() throws Exception {
+        Locadora locadora = new Locadora();
+
+        locadora.acervo().cadastrarItem(
+                "J1", "God of War", "Santa Monica", "Jogo", 2022);
+
+        locadora.acervo().adicionarExemplar("J1", "T001");
+
+        locadora.usuarios().cadastrarUsuario("U0", "Carlos");
+        locadora.usuarios().cadastrarUsuario("U1", "João");
+        locadora.usuarios().cadastrarUsuario("U2", "Maria");
+
+        LocalDate data = LocalDate.of(2026, 1, 10);
+
+        locadora.emprestimos().emprestar("T001", "U0", data);
+
+        locadora.emprestimos().reservar("J1", "U1", data);
+        locadora.emprestimos().reservar("J1", "U2", data.plusDays(1));
+
+        locadora.emprestimos().devolver("T001", data.plusDays(2));
+
+        // Maria tenta pegar o exemplar antes de João.
+        assertThrows(ExemplarIndisponivelException.class,
+                () -> locadora.emprestimos().emprestar(
+                        "T001", "U2", data.plusDays(3)));
+    }
+
+    @Test
+    @DisplayName("reserva é removida após o usuário realizar o empréstimo")
+    void reservaRemovidaAposEmprestimo() throws Exception {
+        Locadora locadora = new Locadora();
+
+        locadora.acervo().cadastrarItem(
+                "J1", "God of War", "Santa Monica", "Jogo", 2022);
+
+        locadora.acervo().adicionarExemplar("J1", "T001");
+
+        locadora.usuarios().cadastrarUsuario("U0", "Carlos");
+        locadora.usuarios().cadastrarUsuario("U1", "João");
+
+        LocalDate data = LocalDate.of(2026, 1, 10);
+
+        locadora.emprestimos().emprestar("T001", "U0", data);
+
+        locadora.emprestimos().reservar("J1", "U1", data);
+
+        locadora.emprestimos().devolver("T001", data.plusDays(1));
+
+        locadora.emprestimos().emprestar(
+                "T001", "U1", data.plusDays(2));
+
+        assertTrue(
+                locadora.emprestimos().listarReservas("J1").isEmpty());
+    }
+
+
+
 
 
 
