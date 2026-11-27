@@ -106,17 +106,8 @@ public class EmprestimosDeJogos implements EmprestimoService {
             throw new OperacaoNaoPermitidaException(
                     "Não existe empréstimo ativo para este exemplar.");
         }
-
-        if (data.isBefore(emprestimo.getDataDoEmprestimo())) {
-            throw new OperacaoNaoPermitidaException(
-                    "A data de devolução não pode ser anterior ao empréstimo.");
-        }
-
         emprestimo.registrarDevolucao(data);
-
-        emprestimo.getExemplar().setStatus(
-                StatusExemplar.DISPONIVEL);
-
+        emprestimo.getExemplar().setStatus(StatusExemplar.DISPONIVEL);
         emprestimo.getUsuario().registrarDevolucao();
     }
 

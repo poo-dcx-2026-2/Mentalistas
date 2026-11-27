@@ -426,4 +426,78 @@ class AcervoTest {
     }
 
 
+    @Test
+    @DisplayName("devolver exemplar altera seu status para DISPONIVEL")
+    void devolverExemplar() throws Exception {
+        Locadora locadora = new Locadora();
+
+        locadora.acervo().cadastrarItem(
+                "J1", "God of War", "Santa Monica", "Jogo", 2022);
+
+        locadora.acervo().adicionarExemplar("J1", "T001");
+        locadora.usuarios().cadastrarUsuario("U1", "João");
+
+        LocalDate dataEmprestimo = LocalDate.of(2026, 1, 10);
+        LocalDate dataDevolucao = LocalDate.of(2026, 1, 15);
+
+        locadora.emprestimos().emprestar(
+                "T001", "U1", dataEmprestimo);
+
+        locadora.emprestimos().devolver(
+                "T001", dataDevolucao);
+
+        assertEquals(
+                StatusExemplar.DISPONIVEL,
+                locadora.acervo().listarExemplares("J1").get(0).status());
+    }
+
+    @Test
+    @DisplayName("não permite devolver com data anterior ao empréstimo")
+    void devolverComDataAnterior() throws Exception {
+        Locadora locadora = new Locadora();
+
+        locadora.acervo().cadastrarItem(
+                "J1", "God of War", "Santa Monica", "Jogo", 2022);
+
+        locadora.acervo().adicionarExemplar("J1", "T001");
+        locadora.usuarios().cadastrarUsuario("U1", "João");
+
+        locadora.emprestimos().emprestar(
+                "T001", "U1", LocalDate.of(2026, 1, 10));
+
+        assertThrows(DadosInvalidosException.class,
+                () -> locadora.emprestimos().devolver(
+                        "T001", LocalDate.of(2026, 1, 5)));
+    }
+
+    @Test
+    @DisplayName("não permite devolver com data nula")
+    void devolverComDataNula() throws Exception {
+        Locadora locadora = new Locadora();
+
+        locadora.acervo().cadastrarItem(
+                "J1", "God of War", "Santa Monica", "Jogo", 2022);
+
+        locadora.acervo().adicionarExemplar("J1", "T001");
+        locadora.usuarios().cadastrarUsuario("U1", "João");
+
+        locadora.emprestimos().emprestar(
+                "T001", "U1", LocalDate.of(2026, 1, 10));
+
+        assertThrows(DadosInvalidosException.class,
+                () -> locadora.emprestimos().devolver("T001", null));
+    }
+
+    @Test
+    @DisplayName("não permite devolver exemplar sem empréstimo ativo")
+    void devolverSemEmprestimoAtivo() {
+        Locadora locadora = new Locadora();
+
+        assertThrows(OperacaoNaoPermitidaException.class,
+                () -> locadora.emprestimos().devolver(
+                        "T001", LocalDate.of(2026, 1, 15)));
+    }
+
+
+
 }
