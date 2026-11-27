@@ -490,8 +490,14 @@ class AcervoTest {
 
     @Test
     @DisplayName("não permite devolver exemplar sem empréstimo ativo")
-    void devolverSemEmprestimoAtivo() {
+    void devolverSemEmprestimoAtivo() throws Exception {
         Locadora locadora = new Locadora();
+
+        // O exemplar existe, mas nunca foi emprestado. Tombo inexistente
+        // seria RecursoNaoEncontradoException (§3.2 do enunciado).
+        locadora.acervo().cadastrarItem(
+                "J1", "God of War", "Santa Monica", "Jogo", 2022);
+        locadora.acervo().adicionarExemplar("J1", "T001");
 
         assertThrows(OperacaoNaoPermitidaException.class,
                 () -> locadora.emprestimos().devolver(
