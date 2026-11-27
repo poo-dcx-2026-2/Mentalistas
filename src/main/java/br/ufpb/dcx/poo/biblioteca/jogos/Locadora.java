@@ -24,12 +24,18 @@ import br.ufpb.dcx.poo.biblioteca.contrato.ReservaView;
 
 
 public class Locadora implements Biblioteca {
+    private static final String PROPRIEDADE_DADOS = "biblioteca.dados";
 
-    private static final Path PASTA_DADOS = Path.of("dados");
-    private final AcervoDeJogos acervo = new AcervoDeJogos();
-    private final DadosdoUsuario usuarios = new DadosdoUsuario();
-    private final RelatoriosNaoImplementados relatorios = new RelatoriosNaoImplementados();
-    private final EmprestimosDeJogos emprestimo =
+    private Path getPastaDados() {
+        String caminho = System.getProperty(PROPRIEDADE_DADOS, "dados");
+        return Path.of(caminho);
+    }
+
+    private AcervoDeJogos acervo = new AcervoDeJogos();
+    private DadosdoUsuario usuarios = new DadosdoUsuario();
+    private final RelatoriosNaoImplementados relatorios =
+            new RelatoriosNaoImplementados();
+    private EmprestimosDeJogos emprestimo =
             new EmprestimosDeJogos(acervo, usuarios);
 
     @Override
@@ -47,7 +53,9 @@ public class Locadora implements Biblioteca {
     @Override
     public void salvar() throws PersistenciaException {
         try {
-            Files.createDirectories(PASTA_DADOS);
+            Path pastaDados = getPastaDados();
+            Files.createDirectories(pastaDados);
+
 
             // Salvar jogos
             List<String> linhasJogos = new ArrayList<>();
@@ -64,7 +72,7 @@ public class Locadora implements Biblioteca {
             }
 
             Files.write(
-                    PASTA_DADOS.resolve("jogos.txt"),
+                    pastaDados.resolve("jogos.txt"),
                     linhasJogos,
                     StandardCharsets.UTF_8
             );
@@ -83,7 +91,7 @@ public class Locadora implements Biblioteca {
             }
 
             Files.write(
-                    PASTA_DADOS.resolve("exemplares.txt"),
+                    pastaDados.resolve("exemplares.txt"),
                     linhasExemplares,
                     StandardCharsets.UTF_8
             );
@@ -101,7 +109,7 @@ public class Locadora implements Biblioteca {
             }
 
             Files.write(
-                    PASTA_DADOS.resolve("usuarios.txt"),
+                    pastaDados.resolve("usuarios.txt"),
                     linhasUsuarios,
                     StandardCharsets.UTF_8
             );
@@ -124,7 +132,7 @@ public class Locadora implements Biblioteca {
             }
 
             Files.write(
-                    PASTA_DADOS.resolve("emprestimos.txt"),
+                    pastaDados.resolve("emprestimos.txt"),
                     linhasEmprestimos,
                     StandardCharsets.UTF_8
             );
@@ -143,7 +151,7 @@ public class Locadora implements Biblioteca {
             }
 
             Files.write(
-                    PASTA_DADOS.resolve("reservas.txt"),
+                    pastaDados.resolve("reservas.txt"),
                     linhasReservas,
                     StandardCharsets.UTF_8
             );
@@ -157,14 +165,33 @@ public class Locadora implements Biblioteca {
 
     @Override
     public void carregar() throws PersistenciaException {
-        try {
-            // Limpar os dados atuais
-            acervo.limpar();
-            usuarios.limpar();
-            emprestimo.limpar();
+        Path pastaDados = getPastaDados();
 
+        // Se a pasta não existir, inicia com estado vazio.
+        if (!Files.exists(pastaDados)) {
+            acervo = new AcervoDeJogos();
+            usuarios = new DadosdoUsuario();
+            emprestimo = new EmprestimosDeJogos(acervo, usuarios);
+            return;
+        }
+
+        // Carrega primeiro em uma locadora temporária.
+        Locadora temporaria = new Locadora();
+
+        temporaria.carregarDados(pastaDados);
+
+        // Só substitui os dados atuais se tudo der certo.
+        this.acervo = temporaria.acervo;
+        this.usuarios = temporaria.usuarios;
+        this.emprestimo = temporaria.emprestimo;
+
+    }
+    private void carregarDados(Path pastaDados)
+            throws PersistenciaException {
+
+        try {
             // Recuperar jogos
-            for (String linha : lerArquivo("jogos.txt")) {
+            for (String linha : lerArquivo("jogos.txt", pastaDados)) {
                 String[] dados = linha.split(";", -1);
 
                 acervo.restaurarJogo(
@@ -178,7 +205,7 @@ public class Locadora implements Biblioteca {
             }
 
             // Recuperar exemplares
-            for (String linha : lerArquivo("exemplares.txt")) {
+            for (String linha : lerArquivo("exemplares.txt", pastaDados)) {
                 String[] dados = linha.split(";", -1);
 
                 acervo.restaurarExemplar(
@@ -189,7 +216,7 @@ public class Locadora implements Biblioteca {
             }
 
             // Recuperar usuários
-            for (String linha : lerArquivo("usuarios.txt")) {
+            for (String linha : lerArquivo("usuarios.txt", pastaDados)) {
                 String[] dados = linha.split(";", -1);
 
                 usuarios.restaurarUsuario(
@@ -201,7 +228,7 @@ public class Locadora implements Biblioteca {
             }
 
             // Recuperar empréstimos
-            for (String linha : lerArquivo("emprestimos.txt")) {
+            for (String linha : lerArquivo("emprestimos.txt", pastaDados)) {
                 String[] dados = linha.split(";", -1);
 
                 LocalDate devolucao = dados[4].equals("-")
@@ -218,7 +245,7 @@ public class Locadora implements Biblioteca {
             }
 
             // Recuperar reservas
-            for (String linha : lerArquivo("reservas.txt")) {
+            for (String linha : lerArquivo("reservas.txt", pastaDados)) {
                 String[] dados = linha.split(";", -1);
 
                 emprestimo.restaurarReserva(
@@ -237,7 +264,6 @@ public class Locadora implements Biblioteca {
                     "Erro ao carregar os dados: " + e.getMessage()
             );
         }
-
     }
 
     public String emprestarComVerificacaoDeIdade(
@@ -296,10 +322,10 @@ public class Locadora implements Biblioteca {
         );
     }
 
-    private List<String> lerArquivo(String nome)
+    private List<String> lerArquivo(String nome, Path pastaDados)
             throws IOException {
 
-        Path arquivo = PASTA_DADOS.resolve(nome);
+        Path arquivo = pastaDados.resolve(nome);
 
         if (!Files.exists(arquivo)) {
             return new ArrayList<>();
@@ -310,5 +336,4 @@ public class Locadora implements Biblioteca {
                 StandardCharsets.UTF_8
         );
     }
-
 }
