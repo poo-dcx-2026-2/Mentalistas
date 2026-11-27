@@ -126,6 +126,9 @@ public class EmprestimosDeJogos implements EmprestimoService {
             }
         }
 
+        resultado.sort((a, b) ->
+                b.dataDoEmprestimo().compareTo(a.dataDoEmprestimo()));
+
         return resultado;
     }
 

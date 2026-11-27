@@ -588,6 +588,44 @@ class AcervoTest {
     }
 
 
+    @Test
+    @DisplayName("histórico de empréstimos aparece do mais recente para o mais antigo")
+    void historicoEmprestimosOrdenado() throws Exception {
+        Locadora locadora = new Locadora();
+
+        locadora.acervo().cadastrarItem(
+                "J1", "God of War", "Santa Monica", "Jogo", 2022);
+
+        locadora.acervo().adicionarExemplar("J1", "T001");
+        locadora.acervo().adicionarExemplar("J1", "T002");
+
+        locadora.usuarios().cadastrarUsuario("U1", "João");
+
+        // Registra dois empréstimos em datas diferentes.
+        locadora.emprestimos().emprestar(
+                "T001", "U1", LocalDate.of(2026, 1, 10));
+
+        locadora.emprestimos().emprestar(
+                "T002", "U1", LocalDate.of(2026, 1, 15));
+
+        List<br.ufpb.dcx.poo.biblioteca.contrato.EmprestimoView> historico =
+                locadora.emprestimos().listarEmprestimosDoUsuario("U1");
+
+        assertEquals(2, historico.size());
+
+        // O empréstimo de 15/01 deve aparecer primeiro.
+        assertEquals(
+                LocalDate.of(2026, 1, 15),
+                historico.get(0).dataDoEmprestimo());
+
+        // O empréstimo de 10/01 deve aparecer depois.
+        assertEquals(
+                LocalDate.of(2026, 1, 10),
+                historico.get(1).dataDoEmprestimo());
+    }
+
+
+
 
 
 
