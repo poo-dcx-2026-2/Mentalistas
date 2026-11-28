@@ -1,4 +1,3 @@
-
 package br.ufpb.dcx.poo.biblioteca.jogos;
 
 import br.ufpb.dcx.poo.biblioteca.contrato.EmprestimoService;
@@ -10,7 +9,9 @@ import br.ufpb.dcx.poo.biblioteca.contrato.excecoes.*;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public class EmprestimosDeJogos implements EmprestimoService {
@@ -19,13 +20,16 @@ public class EmprestimosDeJogos implements EmprestimoService {
     private final DadosdoUsuario usuarios;
 
     private final List<Emprestimo> emprestimos = new ArrayList<>();
-    private final List<ReservaView> reservas = new ArrayList<>();
 
     public EmprestimosDeJogos(AcervoDeJogos acervo,
                               DadosdoUsuario usuarios) {
         this.acervo = acervo;
         this.usuarios = usuarios;
     }
+
+    // ------------------------------------------------------------------
+    // Empréstimo e devolução
+    // ------------------------------------------------------------------
 
     @Override
     public String emprestar(String tombo, String matricula, LocalDate data)
@@ -34,18 +38,21 @@ public class EmprestimosDeJogos implements EmprestimoService {
             UsuarioInativoException,
             LimiteDeEmprestimosExcedidoException {
 
-        if (tombo == null || tombo.isBlank()
-                || matricula == null || matricula.isBlank()
-                || data == null) {
-            throw new DadosInvalidosException(
-                    "Dados do empréstimo inválidos.");
-        }
+        exigirTexto(tombo, "tombo");
+        exigirTexto(matricula, "matrícula");
+        exigirData(data);
 
         Exemplar exemplar = localizarExemplar(tombo);
         Usuario usuario = usuarios.localizar(matricula);
 
         if (!usuario.isAtivo()) {
-            throw new UsuarioInativoException("Usuário inativo.");
+            throw new UsuarioInativoException(
+                    "Usuário inativo: " + matricula);
+        }
+
+        if (!exemplar.podeSerEmprestadoPara(usuario)) {
+            throw new ExemplarIndisponivelException(
+                    "Exemplar indisponível: " + tombo);
         }
 
         if (usuario.getEmprestimosAtivos()
@@ -54,38 +61,15 @@ public class EmprestimosDeJogos implements EmprestimoService {
                     "Limite de empréstimos atingido.");
         }
 
-        if (exemplar.getStatus() != StatusExemplar.DISPONIVEL) {
-            throw new ExemplarIndisponivelException(
-                    "Exemplar indisponível.");
-        }
-
-        // Verifica se existe uma reserva anterior.
-        List<ReservaView> fila = listarReservas(exemplar.getItem().getCodigo());
-
-        if (!fila.isEmpty()
-                && !fila.get(0).matricula().equals(matricula)) {
-            throw new ExemplarIndisponivelException(
-                    "O exemplar está reservado para outro usuário.");
-        }
-
+        // Tudo validado: só agora o estado muda.
         String id = UUID.randomUUID().toString();
+        Emprestimo emprestimo = new Emprestimo(id, exemplar, usuario, data);
 
-        Emprestimo emprestimo = new Emprestimo(
-                id, exemplar, usuario, data);
+        atenderReservaDo(exemplar);
 
         emprestimos.add(emprestimo);
-
         exemplar.setStatus(StatusExemplar.EMPRESTADO);
         usuario.registrarEmprestimo();
-
-        // Remove a reserva do usuário atendido.
-        if (!fila.isEmpty()) {
-            reservas.removeIf(reserva ->
-                    reserva.codigoDoItem().equals(
-                            exemplar.getItem().getCodigo())
-                            && reserva.matricula().equals(matricula));
-            atualizarPosicoes(exemplar.getItem().getCodigo());
-        }
 
         return id;
     }
@@ -95,60 +79,65 @@ public class EmprestimosDeJogos implements EmprestimoService {
             throws RecursoNaoEncontradoException,
             OperacaoNaoPermitidaException {
 
-        if (tombo == null || tombo.isBlank() || data == null) {
-            throw new DadosInvalidosException(
-                    "Dados da devolução inválidos.");
-        }
+        exigirTexto(tombo, "tombo");
+        exigirData(data);
 
+        Exemplar exemplar = localizarExemplar(tombo);
         Emprestimo emprestimo = localizarEmprestimoAtivo(tombo);
 
         if (emprestimo == null) {
             throw new OperacaoNaoPermitidaException(
                     "Não existe empréstimo ativo para este exemplar.");
         }
+
+        // Lança DadosInvalidosException (data anterior) antes de mudar algo.
         emprestimo.registrarDevolucao(data);
-        emprestimo.getExemplar().setStatus(StatusExemplar.DISPONIVEL);
         emprestimo.getUsuario().registrarDevolucao();
+
+        destinarExemplarLiberado(exemplar);
     }
 
     @Override
     public List<EmprestimoView> listarEmprestimosDoUsuario(
             String matricula) throws RecursoNaoEncontradoException {
 
+        exigirTexto(matricula, "matrícula");
         usuarios.localizar(matricula);
 
-        List<EmprestimoView> resultado = new ArrayList<>();
-
-        for (Emprestimo emprestimo : emprestimos) {
-            if (emprestimo.getUsuario().getMatricula()
-                    .equals(matricula)) {
-                resultado.add(paraView(emprestimo, LocalDate.now()));
+        // Percorre do último para o primeiro registrado; o sort é estável,
+        // então no empate de data o registrado por último vem primeiro.
+        List<Emprestimo> doUsuario = new ArrayList<>();
+        for (int i = emprestimos.size() - 1; i >= 0; i--) {
+            Emprestimo emprestimo = emprestimos.get(i);
+            if (emprestimo.getUsuario().getMatricula().equals(matricula)) {
+                doUsuario.add(emprestimo);
             }
         }
 
-        resultado.sort((a, b) ->
-                b.dataDoEmprestimo().compareTo(a.dataDoEmprestimo()));
-
-        return resultado;
+        return doUsuario.stream()
+                .sorted(Comparator.comparing(
+                        Emprestimo::getDataDoEmprestimo).reversed())
+                .map(this::paraViewSemAtraso)
+                .toList();
     }
 
     @Override
     public List<EmprestimoView> listarAtrasados(LocalDate data) {
 
-        List<EmprestimoView> resultado = new ArrayList<>();
+        exigirData(data);
 
-        if (data == null) {
-            return resultado;
-        }
-
-        for (Emprestimo emprestimo : emprestimos) {
-            if (emprestimo.estaAtrasadoEm(data)) {
-                resultado.add(paraView(emprestimo, data));
-            }
-        }
-
-        return resultado;
+        return emprestimos.stream()
+                .filter(emprestimo -> emprestimo.estaAtrasadoEm(data))
+                .sorted(Comparator.comparing(
+                        Emprestimo::getDataPrevistaDeDevolucao))
+                .map(emprestimo -> paraView(
+                        emprestimo, StatusEmprestimo.ATRASADO))
+                .toList();
     }
+
+    // ------------------------------------------------------------------
+    // Reservas
+    // ------------------------------------------------------------------
 
     @Override
     public String reservar(String codigoDoItem, String matricula,
@@ -156,56 +145,30 @@ public class EmprestimosDeJogos implements EmprestimoService {
             throws RecursoNaoEncontradoException,
             OperacaoNaoPermitidaException {
 
-        if (codigoDoItem == null || codigoDoItem.isBlank()
-                || matricula == null || matricula.isBlank()
-                || data == null) {
-            throw new DadosInvalidosException(
-                    "Dados da reserva inválidos.");
-        }
+        exigirTexto(codigoDoItem, "código do item");
+        exigirTexto(matricula, "matrícula");
+        exigirData(data);
 
         Jogo jogo = localizarJogo(codigoDoItem);
         Usuario usuario = usuarios.localizar(matricula);
 
         if (!usuario.isAtivo()) {
-            throw new OperacaoNaoPermitidaException(
+            throw new UsuarioInativoException(
                     "Usuário inativo não pode reservar jogos.");
         }
 
-        boolean existeDisponivel = jogo.getExemplares().stream()
-                .anyMatch(exemplar ->
-                        exemplar.getStatus() == StatusExemplar.DISPONIVEL);
-
-        if (existeDisponivel) {
+        if (jogo.temExemplarDisponivel()) {
             throw new OperacaoNaoPermitidaException(
                     "Não é necessário reservar: existe exemplar disponível.");
         }
 
-        boolean reservaExistente = reservas.stream()
-                .anyMatch(reserva ->
-                        reserva.codigoDoItem().equals(codigoDoItem)
-                                && reserva.matricula().equals(matricula));
-
-        if (reservaExistente) {
+        if (jogo.getFila().temReservaDe(matricula)) {
             throw new OperacaoNaoPermitidaException(
                     "Usuário já possui reserva para este jogo.");
         }
 
-        int posicao = (int) reservas.stream()
-                .filter(reserva ->
-                        reserva.codigoDoItem().equals(codigoDoItem))
-                .count() + 1;
-
         String id = UUID.randomUUID().toString();
-
-        ReservaView reserva = new ReservaView(
-                id,
-                codigoDoItem,
-                matricula,
-                data,
-                posicao
-        );
-
-        reservas.add(reserva);
+        jogo.getFila().entrar(new Reserva(id, jogo, usuario, data));
 
         return id;
     }
@@ -214,53 +177,86 @@ public class EmprestimosDeJogos implements EmprestimoService {
     public List<ReservaView> listarReservas(String codigoDoItem)
             throws RecursoNaoEncontradoException {
 
-        localizarJogo(codigoDoItem);
+        exigirTexto(codigoDoItem, "código do item");
 
-        List<ReservaView> resultado = new ArrayList<>();
+        Jogo jogo = localizarJogo(codigoDoItem);
+        FilaDeReservas fila = jogo.getFila();
 
-        for (ReservaView reserva : reservas) {
-            if (reserva.codigoDoItem().equals(codigoDoItem)) {
-                resultado.add(reserva);
-            }
-        }
-
-        resultado.sort((a, b) ->
-                Integer.compare(a.posicaoNaFila(), b.posicaoNaFila()));
-
-        return resultado;
+        return fila.emOrdem().stream()
+                .map(reserva -> new ReservaView(
+                        reserva.getId(),
+                        jogo.getCodigo(),
+                        reserva.getUsuario().getMatricula(),
+                        reserva.getData(),
+                        fila.posicaoDe(reserva)))
+                .toList();
     }
 
     @Override
     public void cancelarReserva(String idDaReserva)
             throws RecursoNaoEncontradoException {
 
-        if (idDaReserva == null || idDaReserva.isBlank()) {
-            throw new DadosInvalidosException(
-                    "Identificador da reserva inválido.");
-        }
+        exigirTexto(idDaReserva, "id da reserva");
 
-        ReservaView encontrada = null;
+        for (Jogo jogo : acervo.itens()) {
+            Optional<Reserva> reserva = jogo.getFila().buscar(idDaReserva);
 
-        for (ReservaView reserva : reservas) {
-            if (reserva.id().equals(idDaReserva)) {
-                encontrada = reserva;
-                break;
+            if (reserva.isPresent()) {
+                jogo.getFila().remover(reserva.get());
+
+                Exemplar separado = reserva.get().liberarExemplar();
+                if (separado != null) {
+                    destinarExemplarLiberado(separado);
+                }
+                return;
             }
         }
 
-        if (encontrada == null) {
-            throw new RecursoNaoEncontradoException(
-                    "Reserva não encontrada: " + idDaReserva);
-        }
-
-        String codigo = encontrada.codigoDoItem();
-
-        reservas.remove(encontrada);
-
-        atualizarPosicoes(codigo);
+        throw new RecursoNaoEncontradoException(
+                "Reserva não encontrada: " + idDaReserva);
     }
 
-    // Localiza um exemplar pelo tombo.
+    // ------------------------------------------------------------------
+    // Regras de reserva compartilhadas
+    // ------------------------------------------------------------------
+
+    /**
+     * Exemplar que ficou livre (devolução ou reserva cancelada): vai para a
+     * reserva mais antiga ainda sem exemplar, ou volta a DISPONIVEL.
+     */
+    private void destinarExemplarLiberado(Exemplar exemplar) {
+        exemplar.getItem().getFila().primeiraSemExemplar().ifPresentOrElse(
+                reserva -> reserva.separar(exemplar),
+                () -> exemplar.setStatus(StatusExemplar.DISPONIVEL));
+    }
+
+    /** Se o exemplar estava separado para uma reserva, ela foi atendida. */
+    private void atenderReservaDo(Exemplar exemplar) {
+        Reserva reserva = exemplar.getReservaDona();
+
+        if (reserva != null) {
+            reserva.liberarExemplar();
+            exemplar.getItem().getFila().remover(reserva);
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // Auxiliares
+    // ------------------------------------------------------------------
+
+    private static void exigirTexto(String valor, String campo) {
+        if (valor == null || valor.isBlank()) {
+            throw new DadosInvalidosException(
+                    "O campo " + campo + " é obrigatório.");
+        }
+    }
+
+    private static void exigirData(LocalDate data) {
+        if (data == null) {
+            throw new DadosInvalidosException("A data é obrigatória.");
+        }
+    }
+
     private Exemplar localizarExemplar(String tombo)
             throws RecursoNaoEncontradoException {
 
@@ -276,7 +272,6 @@ public class EmprestimosDeJogos implements EmprestimoService {
                 "Exemplar não encontrado: " + tombo);
     }
 
-    // Localiza um jogo pelo código.
     private Jogo localizarJogo(String codigo)
             throws RecursoNaoEncontradoException {
 
@@ -290,33 +285,23 @@ public class EmprestimosDeJogos implements EmprestimoService {
                 "Jogo não encontrado: " + codigo);
     }
 
-    // Localiza um empréstimo ainda não devolvido.
     private Emprestimo localizarEmprestimoAtivo(String tombo) {
-
-        for (Emprestimo emprestimo : emprestimos) {
-            if (emprestimo.getExemplar().getTombo().equals(tombo)
-                    && emprestimo.estaAtivo()) {
-                return emprestimo;
-            }
-        }
-
-        return null;
+        return emprestimos.stream()
+                .filter(e -> e.estaAtivo()
+                        && e.getExemplar().getTombo().equals(tombo))
+                .findFirst()
+                .orElse(null);
     }
 
-    // Converte Emprestimo para EmprestimoView.
+    /** Na listagem do usuário o status é só ATIVO ou DEVOLVIDO. */
+    private EmprestimoView paraViewSemAtraso(Emprestimo emprestimo) {
+        return paraView(emprestimo, emprestimo.estaAtivo()
+                ? StatusEmprestimo.ATIVO
+                : StatusEmprestimo.DEVOLVIDO);
+    }
+
     private EmprestimoView paraView(Emprestimo emprestimo,
-                                    LocalDate data) {
-
-        StatusEmprestimo status;
-
-        if (!emprestimo.estaAtivo()) {
-            status = StatusEmprestimo.DEVOLVIDO;
-        } else if (emprestimo.estaAtrasadoEm(data)) {
-            status = StatusEmprestimo.ATRASADO;
-        } else {
-            status = StatusEmprestimo.ATIVO;
-        }
-
+                                    StatusEmprestimo status) {
         return new EmprestimoView(
                 emprestimo.getId(),
                 emprestimo.getExemplar().getTombo(),
@@ -328,38 +313,9 @@ public class EmprestimosDeJogos implements EmprestimoService {
         );
     }
 
-    // Atualiza as posições depois de um cancelamento ou atendimento.
-    private void atualizarPosicoes(String codigoDoItem) {
-
-        List<ReservaView> fila = new ArrayList<>();
-
-        for (ReservaView reserva : reservas) {
-            if (reserva.codigoDoItem().equals(codigoDoItem)) {
-                fila.add(reserva);
-            }
-        }
-
-        fila.sort((a, b) ->
-                a.dataDaReserva().compareTo(b.dataDaReserva()));
-
-        for (int i = 0; i < fila.size(); i++) {
-            ReservaView antiga = fila.get(i);
-
-            reservas.remove(antiga);
-
-            reservas.add(new ReservaView(
-                    antiga.id(),
-                    antiga.codigoDoItem(),
-                    antiga.matricula(),
-                    antiga.dataDaReserva(),
-                    i + 1
-            ));
-        }
-    }
-    void limpar() {
-        emprestimos.clear();
-        reservas.clear();
-    }
+    // ------------------------------------------------------------------
+    // Uso interno da persistência (pacote)
+    // ------------------------------------------------------------------
 
     void restaurarEmprestimo(String id, String tombo,
                              String matricula,
@@ -371,11 +327,7 @@ public class EmprestimosDeJogos implements EmprestimoService {
         Usuario usuario = usuarios.localizar(matricula);
 
         Emprestimo novo = new Emprestimo(
-                id,
-                exemplar,
-                usuario,
-                dataEmprestimo
-        );
+                id, exemplar, usuario, dataEmprestimo);
 
         if (dataDevolucao != null) {
             novo.registrarDevolucao(dataDevolucao);
@@ -389,27 +341,43 @@ public class EmprestimosDeJogos implements EmprestimoService {
         }
     }
 
+    /**
+     * @param tomboSeparado tombo do exemplar separado, ou null se a reserva
+     *                      ainda espera exemplar
+     */
     void restaurarReserva(String id, String codigoDoItem,
                           String matricula, LocalDate data,
-                          int posicao) {
+                          String tomboSeparado)
+            throws RecursoNaoEncontradoException {
 
-        ReservaView reserva = new ReservaView(
-                id,
-                codigoDoItem,
-                matricula,
-                data,
-                posicao
-        );
+        Jogo jogo = localizarJogo(codigoDoItem);
+        Usuario usuario = usuarios.localizar(matricula);
 
-        reservas.add(reserva);
+        Reserva reserva = new Reserva(id, jogo, usuario, data);
+        jogo.getFila().entrar(reserva);
+
+        if (tomboSeparado != null) {
+            Exemplar exemplar = localizarExemplar(tomboSeparado);
+
+            if (exemplar.getItem() != jogo
+                    || exemplar.getReservaDona() != null) {
+                throw new DadosInvalidosException(
+                        "Exemplar separado inválido para a reserva " + id);
+            }
+            reserva.separar(exemplar);
+        }
     }
 
     List<Emprestimo> listarTodosEmprestimos() {
         return new ArrayList<>(emprestimos);
     }
 
-    List<ReservaView> listarTodasReservas() {
-        return new ArrayList<>(reservas);
+    /** Todas as reservas, jogo a jogo, cada fila na ordem de chegada. */
+    List<Reserva> listarTodasReservas() {
+        List<Reserva> todas = new ArrayList<>();
+        for (Jogo jogo : acervo.itens()) {
+            todas.addAll(jogo.getFila().emOrdem());
+        }
+        return todas;
     }
-
 }

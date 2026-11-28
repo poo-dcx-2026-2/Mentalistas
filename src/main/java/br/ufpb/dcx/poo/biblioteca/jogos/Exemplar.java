@@ -2,12 +2,12 @@ package br.ufpb.dcx.poo.biblioteca.jogos;
 
 import br.ufpb.dcx.poo.biblioteca.contrato.StatusExemplar;
 
-
 public class Exemplar {
 
-    private String tombo;
-    private Jogo item;
+    private final String tombo;
+    private final Jogo item;
     private StatusExemplar status;
+    private Reserva reservaDona;
 
     public Exemplar(String tombo, Jogo item) {
         this.tombo = tombo;
@@ -16,11 +16,34 @@ public class Exemplar {
     }
 
     public String getTombo() { return tombo; }
-    public void setTombo(String tombo) { this.tombo = tombo; }
 
     public Jogo getItem() { return item; }
-    public void setItem(Jogo item) { this.item = item; }
 
     public StatusExemplar getStatus() { return status; }
     public void setStatus(StatusExemplar status) { this.status = status; }
+
+    public Reserva getReservaDona() { return reservaDona; }
+
+    /**
+     * Um exemplar DISPONIVEL pode ir para qualquer usuário; um RESERVADO só
+     * para o dono da reserva; os demais status, para ninguém.
+     */
+    public boolean podeSerEmprestadoPara(Usuario usuario) {
+        if (status == StatusExemplar.DISPONIVEL) {
+            return true;
+        }
+        return status == StatusExemplar.RESERVADO
+                && reservaDona != null
+                && reservaDona.getUsuario().getMatricula()
+                .equals(usuario.getMatricula());
+    }
+
+    void guardarPara(Reserva reserva) {
+        this.reservaDona = reserva;
+        this.status = StatusExemplar.RESERVADO;
+    }
+
+    void soltarReserva() {
+        this.reservaDona = null;
+    }
 }

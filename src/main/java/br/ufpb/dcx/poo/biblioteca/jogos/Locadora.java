@@ -140,13 +140,19 @@ public class Locadora implements Biblioteca {
             // Salvar reservas
             List<String> linhasReservas = new ArrayList<>();
 
-            for (ReservaView r : emprestimo.listarTodasReservas()) {
+            for (Reserva r : emprestimo.listarTodasReservas()) {
+                // A posição na fila é a ordem das linhas; o tombo do
+                // exemplar separado é "-" quando a reserva ainda espera.
+                String tomboSeparado = r.temExemplarSeparado()
+                        ? codificar(r.getExemplarSeparado().getTombo())
+                        : "-";
+
                 linhasReservas.add(
-                        codificar(r.id()) + ";" +
-                                codificar(r.codigoDoItem()) + ";" +
-                                codificar(r.matricula()) + ";" +
-                                r.dataDaReserva() + ";" +
-                                r.posicaoNaFila()
+                        codificar(r.getId()) + ";" +
+                                codificar(r.getJogo().getCodigo()) + ";" +
+                                codificar(r.getUsuario().getMatricula()) + ";" +
+                                r.getData() + ";" +
+                                tomboSeparado
                 );
             }
 
@@ -253,7 +259,7 @@ public class Locadora implements Biblioteca {
                         decodificar(dados[1]),
                         decodificar(dados[2]),
                         LocalDate.parse(dados[3]),
-                        Integer.parseInt(dados[4])
+                        dados[4].equals("-") ? null : decodificar(dados[4])
                 );
             }
 
@@ -269,9 +275,9 @@ public class Locadora implements Biblioteca {
     public String emprestarComVerificacaoDeIdade(
             String tombo, String matricula, LocalDate data)
             throws RecursoNaoEncontradoException,
-                   ExemplarIndisponivelException,
-                   UsuarioInativoException,
-                   LimiteDeEmprestimosExcedidoException{
+            ExemplarIndisponivelException,
+            UsuarioInativoException,
+            LimiteDeEmprestimosExcedidoException{
 
         if (tombo == null || tombo.isBlank()
                 || matricula == null || matricula.isBlank()
