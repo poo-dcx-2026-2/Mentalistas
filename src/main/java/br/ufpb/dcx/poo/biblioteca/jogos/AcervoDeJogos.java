@@ -170,6 +170,7 @@ public class AcervoDeJogos implements AcervoService {
 
     @Override
     public void baixarExemplar(String tombo) throws RecursoNaoEncontradoException, OperacaoNaoPermitidaException {
+        exigirTextoPreenchido(tombo, "tombo");
         Exemplar exemplar = localizarExemplar(tombo);
 
         if (exemplar == null) {
@@ -188,6 +189,12 @@ public class AcervoDeJogos implements AcervoService {
             throw new OperacaoNaoPermitidaException(
                     "Não é possível baixar um exemplar emprestado."
             );
+        }
+
+        // Um exemplar RESERVADO pode ser baixado: a reserva volta a esperar.
+        Reserva reserva = exemplar.getReservaDona();
+        if (reserva != null) {
+            reserva.liberarExemplar();
         }
 
         exemplar.setStatus(StatusExemplar.INDISPONIVEL);

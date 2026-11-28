@@ -1,20 +1,23 @@
 package br.ufpb.dcx.poo.biblioteca.jogos;
 
+import br.ufpb.dcx.poo.biblioteca.contrato.StatusExemplar;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class Jogo{
+public class Jogo {
 
-    private String codigo;
-    private String titulo;
-    private String autoria;
-    private String categoria;
-    private int ano;
+    private final String codigo;
+    private final String titulo;
+    private final String autoria;
+    private final String categoria;
+    private final int ano;
     private int classificacaoIndicativa;
     private final List<Exemplar> exemplares = new ArrayList<>();
+    private final FilaDeReservas fila = new FilaDeReservas();
 
-    public Jogo(String codigo, String titulo, String autoria, String categoria, int ano) {
+    public Jogo(String codigo, String titulo, String autoria,
+                String categoria, int ano) {
         this.codigo = codigo;
         this.titulo = titulo;
         this.autoria = autoria;
@@ -23,21 +26,22 @@ public class Jogo{
     }
 
     public String getCodigo() { return codigo; }
-    public void setCodigo(String codigo) { this.codigo = codigo; }
-
     public String getTitulo() { return titulo; }
-    public void setTitulo(String titulo) { this.titulo = titulo; }
-
     public String getAutoria() { return autoria; }
-    public void setAutoria(String autoria) { this.autoria = autoria; }
-
     public String getCategoria() { return categoria; }
-    public void setCategoria(String categoria) { this.categoria = categoria; }
-
     public int getAno() { return ano; }
-    public void setAno(int ano) { this.ano = ano; }
 
+    // TODO (PR de encapsulamento): devolver cópia imutável e criar
+    // adicionarExemplar(...) aqui.
     public List<Exemplar> getExemplares() { return exemplares; }
+
+    public FilaDeReservas getFila() { return fila; }
+
+    /** Especialista: quem tem os exemplares sabe se algum está disponível. */
+    public boolean temExemplarDisponivel() {
+        return exemplares.stream()
+                .anyMatch(e -> e.getStatus() == StatusExemplar.DISPONIVEL);
+    }
 
     public int getClassificacaoIndicativa() {
         return classificacaoIndicativa;
@@ -50,9 +54,9 @@ public class Jogo{
                 && classificacaoIndicativa != 14
                 && classificacaoIndicativa != 16
                 && classificacaoIndicativa != 18) {
-            throw new IllegalArgumentException("Classificação indicativa inválida.");
+            throw new IllegalArgumentException(
+                    "Classificação indicativa inválida.");
         }
-
         this.classificacaoIndicativa = classificacaoIndicativa;
     }
 }
